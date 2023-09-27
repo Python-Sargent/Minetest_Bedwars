@@ -1,0 +1,54 @@
+v1.1.0:
+	Added flintlock weapons:
+		+Flintlock pistols, muskets, and blunderbusses
+		+Optional dependencies on mesecons_walllever, moreores, and pipeworks for crafting recipes.
+		Required musket balls as ammo, crafted from steel, diamond, or mithril.
+		Blunderbusses require shot piles, crafted from three musket balls.
+		Each requires gunpowder in order to fire, in addition to ammunition.
+		They have a loading period similar to bows and slingshots, but cannot be fired until fully charged.
+
+	Parties:
+		+Optional dependency for the new parties mod by Zughy
+		+As long as two players are in the same party, their projectiles cannot hurt each other.
+
+	Misc:
+		+Added an api.txt to describe functions that other mods can use to create their own projectile weapons.
+		+Normal arrows now light on fire if they pass through fire or lava.
+		+Fire arrows now extinguish if they pass through water.
+
+	Fixes:
+		-Issues with weapons thinking they're still charged if the player leaves the game, even though they shouldn't be.
+		-Possible crash if a projectile ever called self.object:remove() in its _on_step function.
+		-Dead players will no longer block projectiles.
+
+v1.1.1:
+	Added optional support for my new node_damage mod. With it an tnt, bomb arrows will crack blocks just outside the destruction radius.
+
+v1.1.2:
+	New:
+		+Waterworks support: waterworks pipes can be used as gun barrels in craft recipes
+		+screenshot.png
+
+	Made optional dependencies more optional:
+		+Craftable rocks are available if hardtrees isn't present
+		+Craftable steel pipes if both pipeworks and waterworks aren't present.
+		*Flintlock recipes now use steel strips and flint in place of mesecon wall levers.
+
+	Removed:
+		-Optional dependency on mesecons_walllever
+		-bugs.txt
+
+	Fixes:
+		-Slingshots crashing the game when used
+
+v1.1.3:
+	New:
+		+Added sounds for weapons being charged and fired, and for projectiles impacting nodes. 
+		*Charging and firing sounds come from freesound.org, so their file names include the names of the original uploaders of these sounds.
+		+Added on_charge_begin and on_charge_full callbacks to the api
+		+A second optional feature when using with the node_damage mod, where projectiles damage nodes that they impact.
+		*The above option is disabled by default, even with node_damage included, because it can be annoying, especially with shotguns.
+
+	Fixes:
+		-A crash that could occur from pulverizing a charging weapon.
+		-node_damage mod not actually being optional, and causing a crash when not included.

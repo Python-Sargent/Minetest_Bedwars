@@ -1,0 +1,1 @@
+placeable_impacts_damage_nodes (Allow projectile impacts to damage nodes using the node_damage mod) bool false
