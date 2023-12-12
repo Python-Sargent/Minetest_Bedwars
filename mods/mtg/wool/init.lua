@@ -14,41 +14,12 @@ for i = 1, #dyes do
 		description = S(desc .. " Wool"),
 		tiles = {"wool_" .. name .. ".png"},
 		is_ground_content = false,
-		groups = {snappy = 2, choppy = 2, oddly_breakable_by_hand = 3,
+		stack_max = 64,
+		groups = {snappy = 3, oddly_breakable_by_hand = 2,
 				flammable = 3, wool = 1, [color_group] = 1},
-		sounds = default.node_sound_defaults(),
+		sounds = default.node_sound_leaves_defaults(),
+		on_blast = function(pos)
+			minetest.remove_node(pos)
+		end,
 	})
-
-	minetest.register_craft{
-		type = "shapeless",
-		output = "wool:" .. name,
-		recipe = {"group:dye," .. color_group, "group:wool"},
-	}
 end
-
--- Legacy
--- Backwards compatibility with jordach's 16-color wool mod
-minetest.register_alias("wool:dark_blue", "wool:blue")
-minetest.register_alias("wool:gold", "wool:yellow")
-
--- Dummy calls to S() to allow translation scripts to detect the strings.
--- To update this run:
--- for _,e in ipairs(dye.dyes) do print(("S(%q)"):format(e[2].." Wool")) end
-
---[[
-S("White Wool")
-S("Grey Wool")
-S("Dark Grey Wool")
-S("Black Wool")
-S("Violet Wool")
-S("Blue Wool")
-S("Cyan Wool")
-S("Dark Green Wool")
-S("Green Wool")
-S("Yellow Wool")
-S("Brown Wool")
-S("Orange Wool")
-S("Red Wool")
-S("Magenta Wool")
-S("Pink Wool")
---]]

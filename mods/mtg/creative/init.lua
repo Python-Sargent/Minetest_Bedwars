@@ -53,12 +53,12 @@ if minetest.is_creative_enabled("") then
 		-- To speed up digging in creative, hand 'maxlevel' and 'digtime' have been
 		-- increased such that nodes of differing levels have an insignificant
 		-- effect on digtime.
-		local digtime = 42
+		local digtime = 0
 		local caps = {times = {digtime, digtime, digtime}, uses = 0, maxlevel = 256}
 
 		-- Override the hand tool
 		minetest.override_item("", {
-			range = 10,
+			range = 20,
 			tool_capabilities = {
 				full_punch_interval = 0.5,
 				max_drop_level = 3,
@@ -69,10 +69,10 @@ if minetest.is_creative_enabled("") then
 					choppy  = caps,
 					oddly_breakable_by_hand = caps,
 					-- dig_immediate group doesn't use value 1. Value 3 is instant dig
-					dig_immediate =
-						{times = {[2] = digtime, [3] = 0}, uses = 0, maxlevel = 256},
+					dig_immediate = {times = {[2] = digtime, [3] = 0}, uses = 0, maxlevel = 256},
+					map_node = caps,
 				},
-				damage_groups = {fleshy = 10},
+				damage_groups = {fleshy = 100},
 			}
 		})
 	end)

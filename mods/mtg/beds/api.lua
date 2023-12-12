@@ -17,8 +17,6 @@ local function destruct_bed(pos, n)
 		reverse = not reverse
 		minetest.remove_node(other)
 		minetest.check_for_falling(other)
-		beds.remove_spawns_at(pos)
-		beds.remove_spawns_at(other)
 	else
 		reverse = not reverse
 	end
@@ -36,8 +34,9 @@ function beds.register_bed(name, def)
 		paramtype2 = "facedir",
 		is_ground_content = false,
 		stack_max = 1,
-		groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 3, bed = 1},
-		sounds = def.sounds or default.node_sound_wood_defaults(),
+		drops = "",
+		groups = {snappy = 3, oddly_breakable_by_hand = 3, flammable = 3, bed = 1},
+		sounds = def.sounds or default.node_sound_leaves_defaults(),
 		node_box = {
 			type = "fixed",
 			fixed = def.nodebox.bottom,
@@ -143,9 +142,7 @@ function beds.register_bed(name, def)
 			minetest.set_node(newp, {name = name .. "_top", param2 = new_param2})
 			return true
 		end,
-		can_dig = function(pos, player)
-			return beds.can_dig(pos)
-		end,
+		on_blast = function() end,
 	})
 
 	minetest.register_node(name .. "_top", {
@@ -164,21 +161,31 @@ function beds.register_bed(name, def)
 			type = "fixed",
 			fixed = def.nodebox.top,
 		},
+		on_blast = function(pos) minetest.remove_node(pos) end,
 		on_destruct = function(pos)
 			destruct_bed(pos, 2)
-		end,
-		can_dig = function(pos, player)
-			local node = minetest.get_node(pos)
-			local dir = minetest.facedir_to_dir(node.param2)
-			local p = vector.add(pos, dir)
-			return beds.can_dig(p)
 		end,
 	})
 
 	minetest.register_alias(name, name .. "_bottom")
+end
 
-	minetest.register_craft({
-		output = name,
-		recipe = def.recipe
-	})
+
+beds.teams = {
+	["beds:bed"] = {team_id = "red_team", team_name = "Red Team"}, --team_members = bedwars.get_team().team_members
+}
+
+beds.register_team = function(teamId, teamName, node_name)
+	beds.teams[node_name] = {team_id = teamId, team_name = teamName}
+end
+
+beds.on_rightclick = function(pos, clicker)
+	if clicker and clicker:is_player() then
+		bed_team = beds.teams[minetest.get_node(pos).name]
+		if bed_team then
+			minetest.chat_send_player(clicker:get_player_name(), "Bed Team: " .. tostring(bed_team.team_name) .. ", Team ID: " .. tostring(bed_team.bed_id))
+		else
+			minetest.chat_send_player(clicker:get_player_name(), "Unknown Bed Team '" .. tostring(bed_team) .. "', please check to make sure it's registered.")
+		end
+	end
 end

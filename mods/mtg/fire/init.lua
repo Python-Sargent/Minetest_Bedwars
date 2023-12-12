@@ -54,7 +54,7 @@ local fire_node = {
 	sunlight_propagates = true,
 	floodable = true,
 	damage_per_second = 4,
-	groups = {igniter = 2, dig_immediate = 3, fire = 1},
+	groups = {igniter = 2, dig_immediate = 3, fire = 1, not_in_creative_inventory=1},
 	drop = "",
 	on_flood = flood_flame
 }
@@ -111,26 +111,7 @@ minetest.register_tool("fire:flint_and_steel", {
 				minetest.set_node(pointed_thing.above, {name = "fire:basic_flame"})
 			end
 		end
-		if not minetest.is_creative_enabled(player_name) then
-			-- Wear tool
-			local wdef = itemstack:get_definition()
-			itemstack:add_wear_by_uses(66)
-
-			-- Tool break sound
-			if itemstack:get_count() == 0 and wdef.sound and wdef.sound.breaks then
-				minetest.sound_play(wdef.sound.breaks,
-					{pos = sound_pos, gain = 0.5}, true)
-			end
-			return itemstack
-		end
 	end
-})
-
-minetest.register_craft({
-	output = "fire:flint_and_steel",
-	recipe = {
-		{"default:flint", "default:steel_ingot"}
-	}
 })
 
 --
@@ -236,54 +217,4 @@ if flame_sound then
 			handles[player_name] = nil
 		end
 	end)
-end
-
-
--- Deprecated function kept temporarily to avoid crashes if mod fire nodes call it
-function fire.update_sounds_around() end
-
---
--- ABMs
---
-
-if fire_enabled then
-	-- Ignite neighboring nodes, add basic flames
-	minetest.register_abm({
-		label = "Ignite flame",
-		nodenames = {"group:flammable"},
-		neighbors = {"group:igniter"},
-		interval = 7,
-		chance = 12,
-		catch_up = false,
-		action = function(pos)
-			local p = minetest.find_node_near(pos, 1, {"air"})
-			if p then
-				minetest.set_node(p, {name = "fire:basic_flame"})
-			end
-		end
-	})
-
-	-- Remove flammable nodes around basic flame
-	minetest.register_abm({
-		label = "Remove flammable nodes",
-		nodenames = {"fire:basic_flame"},
-		neighbors = "group:flammable",
-		interval = 5,
-		chance = 18,
-		catch_up = false,
-		action = function(pos)
-			local p = minetest.find_node_near(pos, 1, {"group:flammable"})
-			if not p then
-				return
-			end
-			local flammable_node = minetest.get_node(p)
-			local def = minetest.registered_nodes[flammable_node.name]
-			if def.on_burn then
-				def.on_burn(p)
-			else
-				minetest.remove_node(p)
-				minetest.check_for_falling(p)
-			end
-		end
-	})
 end

@@ -9,18 +9,10 @@ minetest.register_alias("bucket", "bucket:bucket_empty")
 minetest.register_alias("bucket_water", "bucket:bucket_water")
 minetest.register_alias("bucket_lava", "bucket:bucket_lava")
 
-minetest.register_craft({
-	output = "bucket:bucket_empty 1",
-	recipe = {
-		{"default:steel_ingot", "", "default:steel_ingot"},
-		{"", "default:steel_ingot", ""},
-	}
-})
-
 bucket = {}
 bucket.liquids = {}
 
-local function check_protection(pos, name, text)
+--[[local function check_protection(pos, name, text)
 	if minetest.is_protected(pos, name) then
 		minetest.log("action", (name ~= "" and name or "A mod")
 			.. " tried to " .. text
@@ -31,7 +23,7 @@ local function check_protection(pos, name, text)
 		return true
 	end
 	return false
-end
+end]]--
 
 -- Register a new liquid
 --    source = name of the source node
@@ -101,12 +93,6 @@ function bucket.register_liquid(source, flowing, itemname, inventory_image, name
 					end
 				end
 
-				if check_protection(lpos, user
-						and user:get_player_name()
-						or "", "place "..source) then
-					return
-				end
-
 				minetest.set_node(lpos, {name = source})
 				return ItemStack("bucket:bucket_empty")
 			end
@@ -135,11 +121,6 @@ minetest.register_craftitem("bucket:bucket_empty", {
 		if liquiddef ~= nil
 		and liquiddef.itemname ~= nil
 		and node.name == liquiddef.source then
-			if check_protection(pointed_thing.under,
-					user:get_player_name(),
-					"take ".. node.name) then
-				return
-			end
 
 			-- default set to return filled bucket
 			local giving_back = liquiddef.itemname
@@ -193,22 +174,6 @@ bucket.register_liquid(
 	{tool = 1, water_bucket = 1}
 )
 
--- River water source is 'liquid_renewable = false' to avoid horizontal spread
--- of water sources in sloping rivers that can cause water to overflow
--- riverbanks and cause floods.
--- River water source is instead made renewable by the 'force renew' option
--- used here.
-
-bucket.register_liquid(
-	"default:river_water_source",
-	"default:river_water_flowing",
-	"bucket:bucket_river_water",
-	"bucket_river_water.png",
-	S("River Water Bucket"),
-	{tool = 1, water_bucket = 1},
-	true
-)
-
 bucket.register_liquid(
 	"default:lava_source",
 	"default:lava_flowing",
@@ -217,24 +182,3 @@ bucket.register_liquid(
 	S("Lava Bucket"),
 	{tool = 1}
 )
-
-minetest.register_craft({
-	type = "fuel",
-	recipe = "bucket:bucket_lava",
-	burntime = 60,
-	replacements = {{"bucket:bucket_lava", "bucket:bucket_empty"}},
-})
-
--- Register buckets as dungeon loot
-if minetest.global_exists("dungeon_loot") then
-	dungeon_loot.register({
-		{name = "bucket:bucket_empty", chance = 0.55},
-		-- water in deserts/ice or above ground, lava otherwise
-		{name = "bucket:bucket_water", chance = 0.45,
-			types = {"sandstone", "desert", "ice"}},
-		{name = "bucket:bucket_water", chance = 0.45, y = {0, 32768},
-			types = {"normal"}},
-		{name = "bucket:bucket_lava", chance = 0.45, y = {-32768, -1},
-			types = {"normal"}},
-	})
-end

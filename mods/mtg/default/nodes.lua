@@ -38,6 +38,12 @@ default:sand
 
 default:ice
 
+Mineral Blocks
+--------------
+default:steelblock
+default:mese
+default:diamondblock
+
 Trees
 -----
 (1. Trunk 2. Fabricated trunk 3. Leaves 4. Sapling 5. Fruits)
@@ -84,6 +90,19 @@ local function grow_sapling(...)
 	return default.grow_sapling(...)
 end
 
+default.can_dig_map = function(pos, player)
+	if player and player:is_player() then
+		local privs = minetest.get_player_privs(player:get_player_name())
+		if privs.creative == true then
+			return true
+		end
+	else
+		return false
+	end
+end
+
+--can_dig = function(pos, [player]),
+
 --
 -- Stone
 --
@@ -101,8 +120,10 @@ minetest.register_node("default:cobble", {
 	description = S("Cobblestone"),
 	tiles = {"default_cobble.png"},
 	is_ground_content = false,
-	groups = {cracky = 3, stone = 2},
+	groups = {map_node = 1, stone = 2},
 	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 minetest.register_node("default:stonebrick", {
@@ -111,8 +132,10 @@ minetest.register_node("default:stonebrick", {
 	place_param2 = 0,
 	tiles = {"default_stone_brick.png"},
 	is_ground_content = false,
-	groups = {cracky = 2, stone = 1},
+	groups = {map_node = 1, stone = 1},
 	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 minetest.register_node("default:sandstone", {
@@ -128,8 +151,10 @@ minetest.register_node("default:sandstonebrick", {
 	place_param2 = 0,
 	tiles = {"default_sandstone_brick.png"},
 	is_ground_content = false,
-	groups = {cracky = 2},
+	groups = {map_node = 1},
 	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 minetest.register_node("default:obsidian", {
@@ -146,8 +171,10 @@ minetest.register_node("default:obsidian", {
 minetest.register_node("default:dirt", {
 	description = S("Dirt"),
 	tiles = {"default_dirt.png"},
-	groups = {crumbly = 3, soil = 1},
+	groups = {map_node = 1, soil = 1},
 	sounds = default.node_sound_dirt_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 minetest.register_node("default:dirt_with_grass", {
@@ -155,18 +182,13 @@ minetest.register_node("default:dirt_with_grass", {
 	tiles = {"default_grass.png", "default_dirt.png",
 		{name = "default_dirt.png^default_grass_side.png",
 			tileable_vertical = false}},
-	groups = {crumbly = 3, soil = 1, spreading_dirt_type = 1},
+	groups = {map_node = 1, soil = 1, spreading_dirt_type = 1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name = "default_grass_footstep", gain = 0.25},
 	}),
-})
-
-minetest.register_node("default:sand", {
-	description = S("Sand"),
-	tiles = {"default_sand.png"},
-	groups = {crumbly = 3, falling_node = 1, sand = 1},
-	sounds = default.node_sound_sand_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 minetest.register_node("default:ice", {
@@ -174,8 +196,45 @@ minetest.register_node("default:ice", {
 	tiles = {"default_ice.png"},
 	is_ground_content = false,
 	paramtype = "light",
-	groups = {cracky = 3, cools_lava = 1, slippery = 3},
+	groups = {map_node = 1, cools_lava = 1, slippery = 3},
 	sounds = default.node_sound_ice_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
+})
+
+--
+-- Mineral Blocks
+--
+
+minetest.register_node("default:steelblock", {
+	description = S("Steel Block"),
+	tiles = {"default_steel_block.png"},
+	is_ground_content = false,
+	groups = {map_node = 1, level = 2},
+	sounds = default.node_sound_metal_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
+})
+
+minetest.register_node("default:mese", {
+	description = S("Mese Block"),
+	tiles = {"default_mese_block.png"},
+	paramtype = "light",
+	groups = {map_node = 1, level = 2},
+	sounds = default.node_sound_stone_defaults(),
+	light_source = 3,
+	on_blast = function() end,
+	can_dig = can_dig_map,
+})
+
+minetest.register_node("default:diamondblock", {
+	description = S("Diamond Block"),
+	tiles = {"default_diamond_block.png"},
+	is_ground_content = false,
+	groups = {map_node = 1, level = 3},
+	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 --
@@ -187,10 +246,12 @@ minetest.register_node("default:tree", {
 	tiles = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
 	paramtype2 = "facedir",
 	is_ground_content = false,
-	groups = {tree = 1, choppy = 2, oddly_breakable_by_hand = 1, flammable = 2},
+	groups = {tree = 1, map_node = 1},
 	sounds = default.node_sound_wood_defaults(),
 
-	on_place = minetest.rotate_node
+	on_place = minetest.rotate_node,
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:wood", {
@@ -249,6 +310,8 @@ minetest.register_node("default:water_source", {
 	post_effect_color = {a = 103, r = 30, g = 60, b = 90},
 	groups = {water = 3, liquid = 3, cools_lava = 1},
 	sounds = default.node_sound_water_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:water_flowing", {
@@ -296,6 +359,8 @@ minetest.register_node("default:water_flowing", {
 	groups = {water = 3, liquid = 3, not_in_creative_inventory = 1,
 		cools_lava = 1},
 	sounds = default.node_sound_water_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:lava_source", {
@@ -340,6 +405,8 @@ minetest.register_node("default:lava_source", {
 	damage_per_second = 4 * 2,
 	post_effect_color = {a = 191, r = 255, g = 64, b = 0},
 	groups = {lava = 3, liquid = 2, igniter = 1},
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:lava_flowing", {
@@ -385,8 +452,9 @@ minetest.register_node("default:lava_flowing", {
 	liquid_renewable = false,
 	damage_per_second = 4 * 2,
 	post_effect_color = {a = 191, r = 255, g = 64, b = 0},
-	groups = {lava = 3, liquid = 2, igniter = 1,
-		not_in_creative_inventory = 1},
+	groups = {lava = 3, liquid = 2, igniter = 1, not_in_creative_inventory = 1},
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 --
@@ -416,6 +484,31 @@ minetest.register_node("default:ladder_wood", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
+minetest.register_node("default:ladder_map", {
+	description = S("Map Ladder"),
+	drawtype = "signlike",
+	tiles = {"default_ladder_wood.png"},
+	inventory_image = "default_ladder_wood.png",
+	wield_image = "default_ladder_wood.png",
+	paramtype = "light",
+	paramtype2 = "wallmounted",
+	sunlight_propagates = true,
+	walkable = false,
+	climbable = true,
+	is_ground_content = false,
+	selection_box = {
+		type = "wallmounted",
+		--wall_top = = <default>
+		--wall_bottom = = <default>
+		--wall_side = = <default>
+	},
+	groups = {map_node = 1, flammable = 2},
+	legacy_wallmounted = true,
+	sounds = default.node_sound_wood_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
+})
+
 minetest.register_node("default:glass", {
 	description = S("Glass"),
 	drawtype = "glasslike_framed_optional",
@@ -424,8 +517,10 @@ minetest.register_node("default:glass", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = false,
-	groups = {cracky = 3, oddly_breakable_by_hand = 3},
+	groups = {map_node = 1, oddly_breakable_by_hand = 3},
 	sounds = default.node_sound_glass_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:brick", {
@@ -437,8 +532,10 @@ minetest.register_node("default:brick", {
 		"default_brick.png",
 	},
 	is_ground_content = false,
-	groups = {cracky = 3},
+	groups = {map_node = 1},
 	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:meselamp", {
@@ -448,15 +545,33 @@ minetest.register_node("default:meselamp", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = false,
-	groups = {cracky = 3, oddly_breakable_by_hand = 3},
+	groups = {map_node = 1, oddly_breakable_by_hand = 3},
 	sounds = default.node_sound_glass_defaults(),
 	light_source = default.LIGHT_MAX,
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 default.register_mesepost("default:mese_post_light", {
 	description = S("Apple Wood Mese Post Light"),
 	texture = "default_fence_wood.png",
 	material = "default:wood",
+})
+
+minetest.register_node("default:map_bottom", {
+	description = S("Map Bottom"),
+	paramtype2 = "facedir",
+	place_param2 = 0,
+	tiles = {
+		"default_cloud.png",
+	},
+	is_ground_content = false,
+	damage_per_second = 100,
+	move_resistance = 10,
+	groups = {map_node = 1, not_in_creative_inventory = 1},
+	sounds = default.node_sound_stone_defaults(),
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })
 
 --
