@@ -35,7 +35,8 @@ function beds.register_bed(name, def)
 		is_ground_content = false,
 		stack_max = 1,
 		drops = "",
-		groups = {snappy = 3, oddly_breakable_by_hand = 3, flammable = 3, bed = 1},
+		groups = def.groups,
+		team = def.team,
 		sounds = def.sounds or default.node_sound_leaves_defaults(),
 		node_box = {
 			type = "fixed",
@@ -100,6 +101,10 @@ function beds.register_bed(name, def)
 			end
 			return itemstack
 		end,
+		
+		after_dig_node = function(pos, oldnode, oldmetadata, digger)
+			teams.on_digbed(digger:get_player_name(), oldnode.team)
+		end,
 
 		on_destruct = function(pos)
 			destruct_bed(pos, 1)
@@ -109,40 +114,10 @@ function beds.register_bed(name, def)
 			beds.on_rightclick(pos, clicker)
 			return itemstack
 		end,
-
-		on_rotate = function(pos, node, user, _, new_param2)
-			local dir = minetest.facedir_to_dir(node.param2)
-			local p = vector.add(pos, dir)
-			local node2 = minetest.get_node_or_nil(p)
-			if not node2 or not minetest.get_item_group(node2.name, "bed") == 2 or
-					not node.param2 == node2.param2 then
-				return false
-			end
-			if minetest.is_protected(p, user:get_player_name()) then
-				minetest.record_protection_violation(p, user:get_player_name())
-				return false
-			end
-			if new_param2 % 32 > 3 then
-				return false
-			end
-			local newp = vector.add(pos, minetest.facedir_to_dir(new_param2))
-			local node3 = minetest.get_node_or_nil(newp)
-			local node_def = node3 and minetest.registered_nodes[node3.name]
-			if not node_def or not node_def.buildable_to then
-				return false
-			end
-			if minetest.is_protected(newp, user:get_player_name()) then
-				minetest.record_protection_violation(newp, user:get_player_name())
-				return false
-			end
-			node.param2 = new_param2
-			-- do not remove_node here - it will trigger destroy_bed()
-			minetest.set_node(p, {name = "air"})
-			minetest.set_node(pos, node)
-			minetest.set_node(newp, {name = name .. "_top", param2 = new_param2})
-			return true
-		end,
-		on_blast = function() end,
+		
+		can_dig = def.can_dig,
+		
+		on_blast = def.on_blast,
 	})
 
 	minetest.register_node(name .. "_top", {
@@ -153,39 +128,34 @@ function beds.register_bed(name, def)
 		paramtype2 = "facedir",
 		is_ground_content = false,
 		pointable = false,
-		groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 3, bed = 2,
-				not_in_creative_inventory = 1},
+		groups = groups,
 		sounds = def.sounds or default.node_sound_wood_defaults(),
 		drop = name .. "_bottom",
 		node_box = {
 			type = "fixed",
 			fixed = def.nodebox.top,
 		},
-		on_blast = function(pos) minetest.remove_node(pos) end,
+		team = def.team,
+		on_blast = def.on_blast,
 		on_destruct = function(pos)
 			destruct_bed(pos, 2)
 		end,
+		after_dig_node = function(pos, oldnode, oldmetadata, digger)
+			teams.on_digbed(digger:get_player_name(), oldnode.team)
+		end,
+		can_dig = def.can_dig,
 	})
 
 	minetest.register_alias(name, name .. "_bottom")
 end
 
-
-beds.teams = {
-	["beds:bed"] = {team_id = "red_team", team_name = "Red Team"}, --team_members = bedwars.get_team().team_members
-}
-
-beds.register_team = function(teamId, teamName, node_name)
-	beds.teams[node_name] = {team_id = teamId, team_name = teamName}
-end
-
 beds.on_rightclick = function(pos, clicker)
 	if clicker and clicker:is_player() then
-		bed_team = beds.teams[minetest.get_node(pos).name]
-		if bed_team then
-			minetest.chat_send_player(clicker:get_player_name(), "Bed Team: " .. tostring(bed_team.team_name) .. ", Team ID: " .. tostring(bed_team.bed_id))
+		team = minetest.get_node(pos).team
+		if team ~= nil then
+			minetest.chat_send_player(clicker:get_player_name(), team .. " team's bed")
 		else
-			minetest.chat_send_player(clicker:get_player_name(), "Unknown Bed Team '" .. tostring(bed_team) .. "', please check to make sure it's registered.")
+			minetest.chat_send_player(clicker:get_player_name(), "unknown" .. " team's bed")
 		end
 	end
 end

@@ -8,14 +8,15 @@ local S = default.get_translator
 minetest.override_item("", {
 	wield_scale = {x=1,y=1,z=2.5},
 	tool_capabilities = {
-		full_punch_interval = 0.9,
+		full_punch_interval = 0.25,
 		max_drop_level = 0,
 		groupcaps = {
 			crumbly = {times={[2]=3.00, [3]=0.70}, uses=0, maxlevel=3},
 			snappy = {times={[3]=0.40}, uses=0, maxlevel=3},
 			cracky = {times={[3]=4.00}, uses=20, maxlevel=3},
 			choppy = {times={[3]=3.70}, uses=0, maxlevel=3},
-			oddly_breakable_by_hand = {times={[1]=3.50,[2]=2.00,[3]=0.70}, uses=0}
+			oddly_breakable_by_hand = {times={[1]=3.50,[2]=2.00,[3]=0.70}, uses=0},
+			bed = {times={[3]=5.00, [2]=5.00, [1]=5.00}, uses=0},
 		},
 		damage_groups = {fleshy=1},
 	}

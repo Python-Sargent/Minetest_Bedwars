@@ -182,7 +182,7 @@ minetest.register_node("default:dirt_with_grass", {
 	tiles = {"default_grass.png", "default_dirt.png",
 		{name = "default_dirt.png^default_grass_side.png",
 			tileable_vertical = false}},
-	groups = {map_node = 1, soil = 1, spreading_dirt_type = 1},
+	groups = {map_node = 1},
 	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name = "default_grass_footstep", gain = 0.25},
@@ -260,8 +260,10 @@ minetest.register_node("default:wood", {
 	place_param2 = 0,
 	tiles = {"default_wood.png"},
 	is_ground_content = false,
-	groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, wood = 1},
+	groups = {map_node = 1, wood = 1},
 	sounds = default.node_sound_wood_defaults(),
+	on_blast = function() end,
+	can_dig = can_dig_map,
 })
 
 --
@@ -311,7 +313,6 @@ minetest.register_node("default:water_source", {
 	groups = {water = 3, liquid = 3, cools_lava = 1},
 	sounds = default.node_sound_water_defaults(),
 	on_blast = function() end,
-	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:water_flowing", {
@@ -360,7 +361,6 @@ minetest.register_node("default:water_flowing", {
 		cools_lava = 1},
 	sounds = default.node_sound_water_defaults(),
 	on_blast = function() end,
-	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:lava_source", {
@@ -406,7 +406,6 @@ minetest.register_node("default:lava_source", {
 	post_effect_color = {a = 191, r = 255, g = 64, b = 0},
 	groups = {lava = 3, liquid = 2, igniter = 1},
 	on_blast = function() end,
-	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:lava_flowing", {
@@ -454,38 +453,14 @@ minetest.register_node("default:lava_flowing", {
 	post_effect_color = {a = 191, r = 255, g = 64, b = 0},
 	groups = {lava = 3, liquid = 2, igniter = 1, not_in_creative_inventory = 1},
 	on_blast = function() end,
-	can_dig = default.can_dig_map,
 })
 
 --
 -- Tools / "Advanced" crafting / Non-"natural"
 --
 
-minetest.register_node("default:ladder_wood", {
-	description = S("Wooden Ladder"),
-	drawtype = "signlike",
-	tiles = {"default_ladder_wood.png"},
-	inventory_image = "default_ladder_wood.png",
-	wield_image = "default_ladder_wood.png",
-	paramtype = "light",
-	paramtype2 = "wallmounted",
-	sunlight_propagates = true,
-	walkable = false,
-	climbable = true,
-	is_ground_content = false,
-	selection_box = {
-		type = "wallmounted",
-		--wall_top = = <default>
-		--wall_bottom = = <default>
-		--wall_side = = <default>
-	},
-	groups = {choppy = 2, oddly_breakable_by_hand = 3, flammable = 2},
-	legacy_wallmounted = true,
-	sounds = default.node_sound_wood_defaults(),
-})
-
-minetest.register_node("default:ladder_map", {
-	description = S("Map Ladder"),
+minetest.register_node("default:ladder", {
+	description = S("Ladder"),
 	drawtype = "signlike",
 	tiles = {"default_ladder_wood.png"},
 	inventory_image = "default_ladder_wood.png",
@@ -517,7 +492,7 @@ minetest.register_node("default:glass", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = false,
-	groups = {map_node = 1, oddly_breakable_by_hand = 3},
+	groups = {map_node = 1},
 	sounds = default.node_sound_glass_defaults(),
 	on_blast = function() end,
 	can_dig = default.can_dig_map,
@@ -545,7 +520,7 @@ minetest.register_node("default:meselamp", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	is_ground_content = false,
-	groups = {map_node = 1, oddly_breakable_by_hand = 3},
+	groups = {map_node = 1},
 	sounds = default.node_sound_glass_defaults(),
 	light_source = default.LIGHT_MAX,
 	on_blast = function() end,
@@ -556,22 +531,6 @@ default.register_mesepost("default:mese_post_light", {
 	description = S("Apple Wood Mese Post Light"),
 	texture = "default_fence_wood.png",
 	material = "default:wood",
-})
-
-minetest.register_node("default:map_bottom", {
-	description = S("Map Bottom"),
-	paramtype2 = "facedir",
-	place_param2 = 0,
-	tiles = {
-		"default_cloud.png",
-	},
-	is_ground_content = false,
-	damage_per_second = 100,
-	move_resistance = 10,
-	groups = {map_node = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_stone_defaults(),
-	on_blast = function() end,
-	can_dig = default.can_dig_map,
 })
 
 --

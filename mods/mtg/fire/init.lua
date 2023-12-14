@@ -106,8 +106,7 @@ minetest.register_tool("fire:flint_and_steel", {
 			end
 			if nodedef.on_ignite then
 				nodedef.on_ignite(pointed_thing.under, user)
-			elseif minetest.get_item_group(node_under, "flammable") >= 1
-					and minetest.get_node(pointed_thing.above).name == "air" then
+			elseif minetest.get_node(pointed_thing.above).name == "air" then
 				minetest.set_node(pointed_thing.above, {name = "fire:basic_flame"})
 			end
 		end

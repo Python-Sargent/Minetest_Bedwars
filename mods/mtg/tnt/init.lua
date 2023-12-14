@@ -7,7 +7,7 @@ local S = minetest.get_translator("tnt")
 
 
 -- Default to enabled when in singleplayer
-local enable_tnt = minetest.settings:get_bool("enable_tnt")
+local enable_tnt = true
 if enable_tnt == nil then
 	enable_tnt = minetest.is_singleplayer()
 end
@@ -15,10 +15,7 @@ end
 -- loss probabilities array (one in X will be lost)
 local loss_prob = {}
 
-loss_prob["default:cobble"] = 3
-loss_prob["default:dirt"] = 4
-
-local tnt_radius = tonumber(minetest.settings:get("tnt_radius") or 2)
+local tnt_radius = tonumber(minetest.settings:get("tnt_radius") or 4)
 
 -- Fill a list with data for content IDs, after all nodes are registered
 local cid_data = {}
@@ -185,7 +182,7 @@ local function entity_physics(pos, radius, drops)
 				if do_knockback then
 					local obj_vel = obj:get_velocity()
 					obj:set_velocity(calc_velocity(pos, obj_pos,
-							obj_vel, radius * 10))
+							obj_vel, radius * 50))
 				end
 				if do_damage then
 					if not obj:get_armor_groups().immortal then
@@ -216,18 +213,18 @@ local function add_effects(pos, radius, drops)
 		glow = 15,
 	})
 	minetest.add_particlespawner({
-		amount = 64,
-		time = 0.5,
+		amount = 128,
+		time = 1,
 		minpos = vector.subtract(pos, radius / 2),
 		maxpos = vector.add(pos, radius / 2),
-		minvel = {x = -10, y = -10, z = -10},
-		maxvel = {x = 10, y = 10, z = 10},
+		minvel = {x = -10, y = 0, z = -10},
+		maxvel = {x = 10, y = 20, z = 10},
 		minacc = vector.new(),
 		maxacc = vector.new(),
 		minexptime = 1,
 		maxexptime = 2.5,
-		minsize = radius * 3,
-		maxsize = radius * 5,
+		minsize = radius * 5,
+		maxsize = radius * 10,
 		texture = "tnt_smoke.png",
 	})
 

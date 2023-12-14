@@ -31,7 +31,7 @@ minetest.register_chatcommand("killme", {
 })
 
 minetest.register_chatcommand("setblock", {
-	description = S("setblock at yourself to node of type <name>"),
+	description = S("setblock at yourself to node of type 'default:cobble'"),
 	func = function(name)
 		player = minetest.get_player_by_name(name)
 		if player then

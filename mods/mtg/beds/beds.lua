@@ -3,34 +3,52 @@
 -- support for MT game translation.
 local S = beds.get_translator
 
--- Simple shaped bed
+local dyes = dye.dyes
 
-beds.register_bed("beds:bed_red", {
-	description = S("Red Bed"),
-	inventory_image = "beds_bed.png",
-	wield_image = "beds_bed.png",
-	tiles = {
-		bottom = {
-			"beds_bed_top_bottom.png^[transformR90",
-			"beds_bed_under.png",
-			"beds_bed_side_bottom_r.png",
-			"beds_bed_side_bottom_r.png^[transformfx",
-			"beds_transparent.png",
-			"beds_bed_side_bottom.png"
+local ratio = 185
+
+for i = 1, #dyes do
+	local name, desc = unpack(dyes[i])
+
+	local color_group = "color_" .. name
+	
+	beds.register_bed("beds:bed_" .. name, {
+		description = S(name .. " Bed"),
+		inventory_image = "beds_bed.png^[colorize:" .. name .. ":" .. ratio,
+		wield_image = "beds_bed.png^[colorize:" .. name .. ":" .. ratio,
+		tiles = {
+			bottom = {
+				"beds_bed_top_bottom.png^[transformR90^[colorize:" .. name .. ":" .. ratio,
+				"beds_bed_under.png",
+				"beds_bed_side_bottom_r.png^[colorize:" .. name .. ":" .. ratio,
+				"beds_bed_side_bottom_r.png^[transformfx^[colorize:" .. name .. ":" .. ratio,
+				"beds_transparent.png",
+				"beds_bed_side_bottom.png^[colorize:" .. name .. ":" .. ratio
+			},
+			top = {
+				"beds_bed_top_top.png^[transformR90^[colorize:" .. name .. ":" .. ratio,
+				"beds_bed_under.png",
+				"beds_bed_side_top_r.png^[colorize:" .. name .. ":" .. ratio,
+				"beds_bed_side_top_r.png^[transformfx^[colorize:" .. name .. ":" .. ratio,
+				"beds_bed_side_top.png^[colorize:" .. name .. ":" .. ratio,
+				"beds_transparent.png",
+			}
 		},
-		top = {
-			"beds_bed_top_top.png^[transformR90",
-			"beds_bed_under.png",
-			"beds_bed_side_top_r.png",
-			"beds_bed_side_top_r.png^[transformfx",
-			"beds_bed_side_top.png",
-			"beds_transparent.png",
-		}
-	},
-	nodebox = {
-		bottom = {-0.5, -0.5, -0.5, 0.5, 0.0625, 0.5},
-		top = {-0.5, -0.5, -0.5, 0.5, 0.0625, 0.5},
-	},
-	selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.0625, 1.5},
-})
-
+		team = name, -- store what teams bed this is
+		nodebox = {
+			bottom = {-0.5, -0.5, -0.5, 0.5, 0.0625, 0.5},
+			top = {-0.5, -0.5, -0.5, 0.5, 0.0625, 0.5},
+		},
+		selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.0625, 1.5},
+		groups = {bed = 1, [color_group] = 1},
+		on_blast = function() end,
+		can_dig = function(pos, player) 
+			if teams.get_team(player:get_player_name()) ~= minetest.get_node(pos).team and minetest.get_node(pos).team ~= nil then
+				return true
+			else
+				minetest.chat_send_player(player:get_player_name(), "This is your bed")
+			end
+			return false
+		end,
+	})
+end
