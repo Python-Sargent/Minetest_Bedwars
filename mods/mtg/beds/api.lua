@@ -36,7 +36,7 @@ function beds.register_bed(name, def)
 		stack_max = 1,
 		drops = "",
 		groups = def.groups,
-		team = def.team,
+		_team = def.team,
 		sounds = def.sounds or default.node_sound_leaves_defaults(),
 		node_box = {
 			type = "fixed",
@@ -103,7 +103,7 @@ function beds.register_bed(name, def)
 		end,
 		
 		after_dig_node = function(pos, oldnode, oldmetadata, digger)
-			teams.on_digbed(digger:get_player_name(), oldnode.team)
+			teams.on_digbed(digger:get_player_name(), beds.get_team_by_name(oldnode.name))
 		end,
 
 		on_destruct = function(pos)
@@ -135,13 +135,13 @@ function beds.register_bed(name, def)
 			type = "fixed",
 			fixed = def.nodebox.top,
 		},
-		team = def.team,
+		_team = def.team,
 		on_blast = def.on_blast,
 		on_destruct = function(pos)
 			destruct_bed(pos, 2)
 		end,
 		after_dig_node = function(pos, oldnode, oldmetadata, digger)
-			teams.on_digbed(digger:get_player_name(), oldnode.team)
+			teams.on_digbed(digger:get_player_name(), beds.get_team_by_name(oldnode.name))
 		end,
 		can_dig = def.can_dig,
 	})
@@ -149,9 +149,29 @@ function beds.register_bed(name, def)
 	minetest.register_alias(name, name .. "_bottom")
 end
 
+beds.get_team = function(pos)
+	nodedef = minetest.registered_nodes[minetest.get_node(pos)._name]
+	if nodedef.team ~= nil then
+		return nodedef.team
+	else
+		minetest.log("missing team variable on node of type " .. minetest.get_node(pos)._name)
+	end
+	return ""
+end
+
+beds.get_team_by_name = function(name)
+	nodedef = minetest.registered_nodes[name]
+	if nodedef.team ~= nil then
+		return nodedef.team
+	else
+		minetest.log("missing team variable on node of type " .. name)
+	end
+	return "red"
+end
+
 beds.on_rightclick = function(pos, clicker)
 	if clicker and clicker:is_player() then
-		team = minetest.get_node(pos).team
+		team = beds.get_team(pos)
 		if team ~= nil then
 			minetest.chat_send_player(clicker:get_player_name(), team .. " team's bed")
 		else

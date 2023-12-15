@@ -3,6 +3,9 @@
 -- support for MT game translation.
 local S = default.get_translator
 
+local bedcap = {times={[3]=1.00, [2]=1.00, [1]=1.00}, uses=0}
+local woolcap = {times={[3]=1.00, [2]=0.90, [1]=0.75}, uses=0}
+
 -- The hand
 -- Override the hand item registered in the engine in builtin/game/register.lua
 minetest.override_item("", {
@@ -16,7 +19,8 @@ minetest.override_item("", {
 			cracky = {times={[3]=4.00}, uses=20, maxlevel=3},
 			choppy = {times={[3]=3.70}, uses=0, maxlevel=3},
 			oddly_breakable_by_hand = {times={[1]=3.50,[2]=2.00,[3]=0.70}, uses=0},
-			bed = {times={[3]=5.00, [2]=5.00, [1]=5.00}, uses=0},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=1},
 	}
@@ -34,6 +38,8 @@ minetest.register_tool("default:pick_stone", {
 		max_drop_level=0,
 		groupcaps={
 			cracky = {times={[2]=6.00, [3]=5.00}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=3},
 	},
@@ -48,6 +54,8 @@ minetest.register_tool("default:pick_steel", {
 		max_drop_level=1,
 		groupcaps={
 			cracky = {times={[1]=8.00, [2]=5.60, [3]=4.80}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=4},
 	},
@@ -62,6 +70,8 @@ minetest.register_tool("default:pick_diamond", {
 		max_drop_level=3,
 		groupcaps={
 			cracky = {times={[1]=6.00, [2]=5.0, [3]=4.50}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=5},
 	},
@@ -80,6 +90,8 @@ minetest.register_tool("default:axe_stone", {
 		max_drop_level=0,
 		groupcaps={
 			choppy={times={[1]=7.00, [2]=6.0, [3]=5.30}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=3},
 	},
@@ -94,6 +106,8 @@ minetest.register_tool("default:axe_steel", {
 		max_drop_level=1,
 		groupcaps={
 			choppy={times={[1]=6.50, [2]=5.40, [3]=5.00}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=4},
 	},
@@ -108,6 +122,8 @@ minetest.register_tool("default:axe_diamond", {
 		max_drop_level=1,
 		groupcaps={
 			choppy={times={[1]=6.10, [2]=4.90, [3]=4.50}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=7},
 	},
@@ -126,6 +142,8 @@ minetest.register_tool("default:sword_wood", {
 		max_drop_level=0,
 		groupcaps={
 			snappy={times={[2]=6.60, [3]=5.40}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=2},
 	},
@@ -140,6 +158,8 @@ minetest.register_tool("default:sword_stone", {
 		max_drop_level=0,
 		groupcaps={
 			snappy={times={[2]=6.4, [3]=5.40}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=4},
 	},
@@ -154,6 +174,8 @@ minetest.register_tool("default:sword_steel", {
 		max_drop_level=1,
 		groupcaps={
 			snappy={times={[1]=7.5, [2]=6.20, [3]=5.35}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=6},
 	},
@@ -168,6 +190,8 @@ minetest.register_tool("default:sword_diamond", {
 		max_drop_level=1,
 		groupcaps={
 			snappy={times={[1]=6.90, [2]=5.90, [3]=5.20}, uses=0, maxlevel=3},
+			bed = bedcap,
+			wool = woolcap,
 		},
 		damage_groups = {fleshy=8},
 	},

@@ -67,7 +67,8 @@ if minetest.is_creative_enabled("") then
 					cracky  = caps,
 					snappy  = caps,
 					choppy  = caps,
-					bed     = caps,
+					bed     = {times={[3]=1.00, [2]=1.00, [1]=1.00}, uses=0},
+					wool    = {times={[3]=1.00, [2]=0.90, [1]=0.75}, uses=0},
 					oddly_breakable_by_hand = caps,
 					-- dig_immediate group doesn't use value 1. Value 3 is instant dig
 					dig_immediate = {times = {[2] = digtime, [3] = 0}, uses = 0, maxlevel = 256},

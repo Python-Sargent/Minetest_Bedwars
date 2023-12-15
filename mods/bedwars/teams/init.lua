@@ -42,18 +42,26 @@ end
 teams.join_team = function(pn, team) -- use to make o player join a team
 	teams.teams[team].players[pn] = pn
 	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0}
+	minetest.chat_send_player(pn, "Joined team " .. minetest.colorize(teams.get_team(pn), teams.get_team(pn)))
 end
 
 teams.on_joinplayer = function(pn) -- when joining a match
-	for _, team in pairs(teams.teams) do -- look through all teams
-		players = teams.teams[team.name].players
-		if #players < 1 then -- pick an empty team
+	local has_joined = false
+	for tn, team in pairs(teams.teams) do -- for each team show team name and team stats
+		local pc = 0
+		for pn, player in pairs(teams.teams[tn].players) do -- count how many players are in the team
+			pc = pc + 1
+		end
+		if pc < 1 then -- if the team is not full
 			teams.join_team(pn, team.name) -- join the team
+			has_joined = true
 			break
 		end
 	end
-	minetest.chat_send_player(pn, minetest.colorize("red", "No empty team found"))
-	teams.join_team(pn, "red") -- make it so you're in a team
+	if has_joined == false then
+		minetest.chat_send_player(pn, minetest.colorize("red", "No empty team found"))
+		teams.join_team(pn, "red") -- make it so you're in a team
+	end
 end
 
 teams.leave_team = function(pn) -- leave the team you are on
@@ -74,7 +82,7 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 	if team ~= nil then
 		teams.teams[team].has_bed = false -- this team no longer has their bed
 		teams.players[pn].beds = teams.players[pn].beds + 1
-		minetest.chat_send_all(minetest.colorize(teams.teams[team].name, team .. "'s") .. "bed was broken by " .. minetest.colorize(teams.players[pn].team, pn))
+		minetest.chat_send_all(minetest.colorize(teams.teams[team].name, team .. "'s") .. " bed was broken by " .. minetest.colorize(teams.players[pn].team, pn))
 	else
 		minetest.chat_send_all("What on earth, this bed has no team!?!")
 	end
@@ -84,6 +92,7 @@ teams.respawn = function(player) -- custom respawn function
 	player:get_inventory():set_list("main", {})
 	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
 		player:respawn() -- respawn the player
+		player:get_inventory():add_item("main", "default:sword_wood 1")
 	end
 end
 
