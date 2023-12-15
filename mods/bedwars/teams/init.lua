@@ -53,6 +53,7 @@ teams.on_joinplayer = function(pn) -- when joining a match
 		end
 	end
 	minetest.chat_send_player(pn, minetest.colorize("red", "No empty team found"))
+	teams.join_team(pn, "red") -- make it so you're in a team
 end
 
 teams.leave_team = function(pn) -- leave the team you are on
@@ -80,6 +81,7 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 end
 
 teams.respawn = function(player) -- custom respawn function
+	player:get_inventory():set_list("main", {})
 	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
 		player:respawn() -- respawn the player
 	end
