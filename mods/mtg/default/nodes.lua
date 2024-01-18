@@ -111,7 +111,6 @@ minetest.register_node("default:stone", {
 	description = S("Stone"),
 	tiles = {"default_stone.png"},
 	groups = {cracky = 3, stone = 1},
-	drop = "default:cobble",
 	legacy_mineral = true,
 	sounds = default.node_sound_stone_defaults(),
 })
@@ -141,7 +140,7 @@ minetest.register_node("default:stonebrick", {
 minetest.register_node("default:sandstone", {
 	description = S("Sandstone"),
 	tiles = {"default_sandstone.png"},
-	groups = {crumbly = 1, cracky = 3},
+	groups = {sandstone = 1, cracky = 2},
 	sounds = default.node_sound_stone_defaults(),
 })
 
@@ -183,7 +182,6 @@ minetest.register_node("default:dirt_with_grass", {
 		{name = "default_dirt.png^default_grass_side.png",
 			tileable_vertical = false}},
 	groups = {map_node = 1},
-	drop = "default:dirt",
 	sounds = default.node_sound_dirt_defaults({
 		footstep = {name = "default_grass_footstep", gain = 0.25},
 	}),
@@ -528,7 +526,7 @@ minetest.register_node("default:meselamp", {
 })
 
 default.register_mesepost("default:mese_post_light", {
-	description = S("Apple Wood Mese Post Light"),
+	description = S("Mese Post Light"),
 	texture = "default_fence_wood.png",
 	material = "default:wood",
 })
@@ -543,4 +541,6 @@ minetest.register_node("default:cloud", {
 	is_ground_content = false,
 	sounds = default.node_sound_defaults(),
 	groups = {not_in_creative_inventory = 1},
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
 })

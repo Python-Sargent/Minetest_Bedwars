@@ -150,21 +150,21 @@ function beds.register_bed(name, def)
 end
 
 beds.get_team = function(pos)
-	nodedef = minetest.registered_nodes[minetest.get_node(pos)._name]
-	if nodedef.team ~= nil then
-		return nodedef.team
+	nodedef = minetest.registered_nodes[minetest.get_node(pos).name]
+	if nodedef._team ~= nil then
+		return nodedef._team
 	else
-		minetest.log("missing team variable on node of type " .. minetest.get_node(pos)._name)
+		minetest.log("missing team variable on node of type " .. minetest.get_node(pos).name)
 	end
 	return ""
 end
 
 beds.get_team_by_name = function(name)
 	nodedef = minetest.registered_nodes[name]
-	if nodedef.team ~= nil then
-		return nodedef.team
+	if nodedef._team ~= nil then
+		return nodedef._team
 	else
-		minetest.log("missing team variable on node of type " .. name)
+		minetest.log("Missing team variable on node of type " .. name)
 	end
 	return "red"
 end
@@ -172,8 +172,8 @@ end
 beds.on_rightclick = function(pos, clicker)
 	if clicker and clicker:is_player() then
 		team = beds.get_team(pos)
-		if team ~= nil then
-			minetest.chat_send_player(clicker:get_player_name(), team .. " team's bed")
+		if team ~= nil and team ~= "" then
+			minetest.chat_send_player(clicker:get_player_name(), minetest.colorize(team, team) .. " team's bed")
 		else
 			minetest.chat_send_player(clicker:get_player_name(), "unknown" .. " team's bed")
 		end

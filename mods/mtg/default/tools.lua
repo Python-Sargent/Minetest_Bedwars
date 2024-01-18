@@ -4,7 +4,8 @@
 local S = default.get_translator
 
 local bedcap = {times={[3]=1.00, [2]=1.00, [1]=1.00}, uses=0}
-local woolcap = {times={[3]=1.00, [2]=0.90, [1]=0.75}, uses=0}
+local woolcap = {times={[1]=2.00}, uses=0}
+local sandstonecap = {times={[1]=3.00}, uses=0}
 
 -- The hand
 -- Override the hand item registered in the engine in builtin/game/register.lua
@@ -15,12 +16,13 @@ minetest.override_item("", {
 		max_drop_level = 0,
 		groupcaps = {
 			crumbly = {times={[2]=3.00, [3]=0.70}, uses=0, maxlevel=3},
-			snappy = {times={[3]=0.40}, uses=0, maxlevel=3},
+			snappy = {times={[3]=1.00}, uses=0, maxlevel=3},
 			cracky = {times={[3]=4.00}, uses=20, maxlevel=3},
-			choppy = {times={[3]=3.70}, uses=0, maxlevel=3},
-			oddly_breakable_by_hand = {times={[1]=3.50,[2]=2.00,[3]=0.70}, uses=0},
+			choppy = {times={[3]=3.75}, uses=0, maxlevel=3},
+			oddly_breakable_by_hand = {times={[1]=3.00,[2]=2.00,[3]=1.00}, uses=0},
 			bed = bedcap,
 			wool = woolcap,
+			sandstone = sandstonecap,
 		},
 		damage_groups = {fleshy=1},
 	}
@@ -43,7 +45,9 @@ minetest.register_tool("default:pick_stone", {
 		},
 		damage_groups = {fleshy=3},
 	},
-	groups = {pickaxe = 1}
+	groups = {pickaxe = 1},
+	on_drop = function() end
+
 })
 
 minetest.register_tool("default:pick_steel", {
@@ -59,7 +63,8 @@ minetest.register_tool("default:pick_steel", {
 		},
 		damage_groups = {fleshy=4},
 	},
-	groups = {pickaxe = 1}
+	groups = {pickaxe = 1},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:pick_diamond", {
@@ -75,7 +80,8 @@ minetest.register_tool("default:pick_diamond", {
 		},
 		damage_groups = {fleshy=5},
 	},
-	groups = {pickaxe = 1}
+	groups = {pickaxe = 1},
+	on_drop = function() end
 })
 
 --
@@ -95,7 +101,8 @@ minetest.register_tool("default:axe_stone", {
 		},
 		damage_groups = {fleshy=3},
 	},
-	groups = {axe = 1}
+	groups = {axe = 1},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:axe_steel", {
@@ -111,7 +118,8 @@ minetest.register_tool("default:axe_steel", {
 		},
 		damage_groups = {fleshy=4},
 	},
-	groups = {axe = 1}
+	groups = {axe = 1},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:axe_diamond", {
@@ -127,7 +135,8 @@ minetest.register_tool("default:axe_diamond", {
 		},
 		damage_groups = {fleshy=7},
 	},
-	groups = {axe = 1}
+	groups = {axe = 1},
+	on_drop = function() end
 })
 
 --
@@ -147,7 +156,8 @@ minetest.register_tool("default:sword_wood", {
 		},
 		damage_groups = {fleshy=2},
 	},
-	groups = {sword = 1, flammable = 2}
+	groups = {sword = 1, flammable = 2},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:sword_stone", {
@@ -163,7 +173,8 @@ minetest.register_tool("default:sword_stone", {
 		},
 		damage_groups = {fleshy=4},
 	},
-	groups = {sword = 1}
+	groups = {sword = 1},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:sword_steel", {
@@ -179,7 +190,8 @@ minetest.register_tool("default:sword_steel", {
 		},
 		damage_groups = {fleshy=6},
 	},
-	groups = {sword = 1}
+	groups = {sword = 1},
+	on_drop = function() end
 })
 
 minetest.register_tool("default:sword_diamond", {
@@ -195,5 +207,6 @@ minetest.register_tool("default:sword_diamond", {
 		},
 		damage_groups = {fleshy=8},
 	},
-	groups = {sword = 1}
+	groups = {sword = 1},
+	on_drop = function() end
 })
