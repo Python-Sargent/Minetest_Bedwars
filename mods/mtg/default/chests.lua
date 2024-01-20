@@ -227,13 +227,7 @@ function default.chest.register_chest(prefixed_name, d)
 			default.chest.open_chests[cn] = { pos = pos,
 					sound = def.sound_close, swap = name }
 		end
-		def.on_blast = function(pos)
-			local drops = {}
-			default.get_inventory_drops(pos, "main", drops)
-			drops[#drops+1] = name
-			minetest.remove_node(pos)
-			return drops
-		end
+		def.on_blast = function() end
 	end
 
 	default.set_inventory_action_loggers(def, "chest")
@@ -315,6 +309,80 @@ default.chest.register_chest("default:chest", {
 	sounds = default.node_sound_wood_defaults(),
 	sound_open = "default_chest_open",
 	sound_close = "default_chest_close",
-	groups = {choppy = 2, oddly_breakable_by_hand = 2},
+	groups = {map_node = 1},
 })
 
+default.chest.enderchest = {}
+
+default.chest.enderchest.show_formspec = function(pn, name, formspec)
+	minetest.show_formspec(pn, name, formspec)
+end
+
+function default.chest.enderchest.get_chest_formspec(player)
+	local formspec =
+		"size[8,9]" ..
+		"list[detached:enderchest_" .. player .. ";main;0,0.3;8,4;]" ..
+		"list[current_player;main;0,4.85;8,1;]" ..
+		"list[current_player;main;0,6.08;8,3;8]" ..
+		"listring[detached:enderchest_" .. player .. ";main]" ..
+		"listring[current_player;main]" ..
+		default.get_hotbar_bg(0,4.85)
+	return formspec
+end
+
+default.chest.enderchest.create_inventory = function(player)
+	minetest.create_detached_inventory("enderchest_" .. player, {
+		allow_move = function(inv, from_list, from_index, to_list, to_index, count, player)
+			return count -- allow moving
+		end,
+
+		allow_put = function(inv, listname, index, stack, player)
+			return stack:get_count() -- allow putting
+		end,
+
+		allow_take = function(inv, listname, index, stack, player)
+			return stack:get_count() -- allow taking
+		end,
+	})
+end
+
+default.chest.enderchest.delete_inventory = function(player)
+	minetest.remove_detached_inventory("enderchest_" .. player)
+end
+
+minetest.register_on_joinplayer(function(player, last_login)
+	default.chest.enderchest.create_inventory(player:get_player_name())
+end)
+
+minetest.register_on_leaveplayer(function(player, timed_out)
+	default.chest.enderchest.delete_inventory(player:get_player_name())
+end)
+
+minetest.register_node("default:enderchest", {
+	description = S("Ender Chest"),
+	tiles = {
+		"default_enderchest_top.png",
+		"default_enderchest_top.png",
+		"default_enderchest_side.png",
+		"default_enderchest_side.png",
+		"default_enderchest_side.png",
+		"default_enderchest_front.png"
+	},
+	drawtype = "normal",
+	paramtype = "light",
+	paramtype2 = "facedir",
+	legacy_facedir_simple = true,
+	is_ground_content = false,
+	sounds = default.node_sound_wood_defaults(),
+	groups = {map_node = 1},
+	on_blast = function() end,
+	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		if not default.can_interact_with_node(clicker, pos) then
+			return itemstack
+		end
+
+		local cn = clicker:get_player_name()
+
+		default.chest.enderchest.show_formspec(cn, "default:enderchest", default.chest.enderchest.get_chest_formspec(cn))
+	end
+})

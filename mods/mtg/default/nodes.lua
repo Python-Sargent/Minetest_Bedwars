@@ -161,6 +161,7 @@ minetest.register_node("default:obsidian", {
 	tiles = {"default_obsidian.png"},
 	sounds = default.node_sound_stone_defaults(),
 	groups = {cracky = 1, level = 2},
+	on_blast = function() end,
 })
 
 --

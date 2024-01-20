@@ -5,7 +5,7 @@ teams.teams = {}
 teams.maps = {}
 
 teams.maps.current_map = {
-	name = "stoneworld",
+	name = "Galactuim",
 	teams = {
 		["red"] = {name = "red", spawn = {x=0, y=0.5, z=0}},
 		["blue"] = {name = "blue", spawn = {x=0, y=0.5, z=62}},
@@ -70,6 +70,42 @@ teams.get_team = function(pn) -- get the team name of the player using player na
 	return teams.players[pn].team
 end
 
+local leave_callbacks = {}
+
+teams.register_leave_callback = function(name, callback)
+	leave_callbacks[name] = callback
+end
+
+local run_leave_callbacks = function(player, team)
+	for i, callback in ipairs(leave_callbacks) do
+		callback(player, team)
+	end
+end
+
+local join_callbacks = {}
+
+teams.register_join_callback = function(name, callback)
+	join_callbacks[name] = callback
+end
+
+local run_join_callbacks = function(player, team)
+	for i, callback in ipairs(join_callbacks) do
+		callback(player, team)
+	end
+end
+
+local die_callbacks = {}
+
+teams.register_die_callback = function(name, callback)
+	die_callbacks[name] = {name = name, func = callback}
+end
+
+local run_die_callbacks = function(player, team)
+	for i, callback in ipairs(die_callbacks) do
+		die_callbacks[callback].func(player, team)
+	end
+end
+
 teams.on_dieplayer = function(pn, reason) -- a player died, update score and respawn
 	reason = reason or "died"
 	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. minetest.colorize("pink", " " .. reason))
@@ -81,11 +117,14 @@ teams.join_team = function(pn, team) -- use to make o player join a team
 	teams.teams[team].players[pn] = pn
 	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0}
 	local player = minetest.get_player_by_name(pn)
+	run_join_callbacks(player, team)
 	player:set_pos(teams.maps.current_map.teams[team].spawn)
 	minetest.chat_send_player(pn, "Joined team " .. minetest.colorize(teams.get_team(pn), teams.get_team(pn)))
 end
 
 teams.on_joinplayer = function(pn) -- when joining a match
+	minetest.get_player_by_name(pn):set_properties({nametag = ""})
+	--default.chest.enderchest.create_inventory(pn)
 	local has_joined = false
 	for tn, mapteam in pairs(teams.maps.current_map.teams) do -- for each team show team name and team stats
 		local pc = 0
@@ -106,6 +145,7 @@ end
 
 teams.leave_team = function(pn) -- leave the team you are on
 	teams.teams[teams.get_team(pn)].players[pn] = nil
+	run_leave_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn))
 	teams.players[pn] = nil
 end
 
@@ -129,6 +169,7 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 end
 
 teams.respawn = function(player) -- custom respawn function
+	run_die_callbacks(player, teams.get_team(player:get_player_name()))
 	player:get_inventory():set_list("main", {})
 	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
 		player:respawn() -- respawn the player
