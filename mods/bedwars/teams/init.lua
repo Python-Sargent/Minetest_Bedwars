@@ -4,13 +4,19 @@ teams.teams = {}
 
 teams.maps = {}
 
+local modpath = minetest.get_modpath("teams")
+
 teams.maps.current_map = {
 	name = "Galactuim",
 	teams = {
-		["red"] = {name = "red", spawn = {x=0, y=0.5, z=0}},
-		["blue"] = {name = "blue", spawn = {x=0, y=0.5, z=62}},
+		["red"] = {name = "red", spawn = {x=15, y=1, z=22}},
+		["blue"] = {name = "blue", spawn = {x=15, y=1, z=84}},
 	},
+	start = {x = 15, y = 0, z = 53},
 	path = "",
+	init = function()
+		minetest.place_schematic({x=0, y=-10, z=0}, modpath .. "/schematics/Galactium_Map.mts", nil, nil, true)
+	end,
 }
 
 teams.maps.maplist = {}
@@ -106,11 +112,25 @@ local run_die_callbacks = function(player, team)
 	end
 end
 
+teams.respawn = function(player) -- custom respawn function
+	player:get_inventory():set_list("main", {})
+	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
+		player:respawn() -- respawn the player
+		player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
+		player:get_inventory():add_item("main", "default:sword_wood 1")
+	else
+		player:respawn() -- respawn the player
+		player:set_pos(teams.maps.current_map.start)
+	end
+end
+
 teams.on_dieplayer = function(pn, reason) -- a player died, update score and respawn
+	run_die_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn))
 	reason = reason or "died"
 	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. minetest.colorize("pink", " " .. reason))
 	teams.players[pn].deaths = teams.players[pn].deaths + 1 -- increment player deaths
 	teams.teams[teams.get_team(pn)].deaths = teams.teams[teams.get_team(pn)].deaths + 1 -- increment total team deaths
+	teams.respawn(minetest.get_player_by_name(pn))
 end
 
 teams.join_team = function(pn, team) -- use to make o player join a team
@@ -168,16 +188,6 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 	end
 end
 
-teams.respawn = function(player) -- custom respawn function
-	run_die_callbacks(player, teams.get_team(player:get_player_name()))
-	player:get_inventory():set_list("main", {})
-	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
-		player:respawn() -- respawn the player
-		player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
-		player:get_inventory():add_item("main", "default:sword_wood 1")
-	end
-end
-
 minetest.register_on_dieplayer(function(player, reason) -- trigger teams.on_dieplayer()
 	teams.on_dieplayer(player:get_player_name())
 end)
@@ -226,7 +236,8 @@ minetest.register_chatcommand("teams", { -- chatcommand to control teams (must b
     privs = {
         interact = true,
     },
-	description = "Usage: teams <cmd> <param>\n" .. 
+	description = "Usage: teams <cmd> <param>\n" ..
+				  "teams map place\n" ..
 				  "teams join <team> (join a team)\n" ..
 				  "teams list players (list players in your team)\n" ..
 				  "teams list teams (list teams)\n" ..
@@ -287,6 +298,11 @@ minetest.register_chatcommand("teams", { -- chatcommand to control teams (must b
 				else
 					return false, "Usage: teams reset <cmd> <param>"
 				end
+			end
+		elseif cmd == "map" then
+			local cmd2 = parts[2]
+			if cmd2 == "place" then
+				teams.maps.current_map.init()
 			end
 		else
 			return true, "Usage: teams <cmd> <param>"

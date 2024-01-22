@@ -53,13 +53,21 @@ HUD.init_HUD = function(player)
 end
 
 HUD.update_HUD = function(player)
-    local hudp = HUD.players(player:get_player_name())
+    local hudp = HUD.players[player:get_player_name()]
     player:hud_change(hudp.teamhud, "text", "Team: " .. teams.get_team(player:get_player_name()))
     player:hud_change(hudp.killhud, "text", "Kills: " .. teams.players[player:get_player_name()].kills .. " / " .. teams.teams[teams.get_team(player:get_player_name())].kills)
     player:hud_change(hudp.deathud, "text", "Deaths: " .. teams.players[player:get_player_name()].deaths .. " / " .. teams.teams[teams.get_team(player:get_player_name())].deaths)
     minetest.log("updated hud for player: " .. player.name)
 end
 
+HUD.remove_HUD = function(player)
+    local hudp = HUD.players[player:get_player_name()]
+    player:hud_remove(hudp.background)
+    player:hud_remove(hudp.teamhud)
+    player:hud_remove(hudp.killhud)
+    player:hud_remove(hudp.deathud)
+    HUD.players[hudp.name] = nil
+end
 --player:hud_change(idx, "text", "New Text")
 
 HUD.update_all = function(player)
@@ -70,12 +78,62 @@ HUD.update_all = function(player)
     end
 end
 
-minetest.register_on_joinplayer(function(player, last_login)
-	HUD.init_HUD(player)
+local on_joinplayer = function(player)
+    HUD.init_HUD(player)
     minetest.log("player joined")
+end
+
+minetest.register_on_joinplayer(function(player, last_login)
+	on_joinplayer(player)
 end)
 
 teams.register_die_callback("update_hud", function(player, team)
 	minetest.log("player died")
 	HUD.update_all(player)
 end)
+
+minetest.register_chatcommand("hud", {
+    privs = {
+        interact = true,
+    },
+	description = "Usage: hud show\n" ..
+    "                        hud hide\n" ..
+    "                        hud update\n" ..
+    "                        hud update all\n" ..
+    "                        hud reset",
+    func = function(name, param)
+		local parts = param:split(" ")
+		local cmd = parts[1]
+        local player = minetest.get_player_by_name(name)
+
+		if cmd == "show" then
+			on_joinplayer(player)
+        elseif cmd == "hide" then
+            HUD.remove_HUD(player)
+        elseif cmd == "update" then
+            local cmd2 = parts[2]
+            if cmd2 == "all" then
+                HUD.update_all(player)
+            else
+                HUD.update_HUD(player)
+            end
+        elseif cmd == "reset" then
+            HUD.init_HUD(player)
+		else
+			return true, "Usage: hud <cmd> [cmd2]"
+		end
+	end,
+})
+
+--[[
+    local param2 = parts[2]
+    if param2 == "all" then
+        shop.remove_upgrades(minetest.get_player_by_name(name))
+        return true, "Removed all upgrades"
+    elseif shop.find_upgrade(param2) then
+        shop.remove_upgrade(minetest.get_player_by_name(name), param2)
+        return true, "Removed upgrade: " .. param2
+    else
+        return false, "Must give an upgrade to remove"
+    end
+]]
