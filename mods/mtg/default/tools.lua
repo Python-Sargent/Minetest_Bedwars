@@ -43,7 +43,6 @@ minetest.register_tool("default:pick_stone", {
 			bed = bedcap,
 			wool = woolcap,
 		},
-		damage_groups = {fleshy=3},
 	},
 	groups = {pickaxe = 1},
 	on_drop = function() end
@@ -61,7 +60,6 @@ minetest.register_tool("default:pick_steel", {
 			bed = bedcap,
 			wool = woolcap,
 		},
-		damage_groups = {fleshy=4},
 	},
 	groups = {pickaxe = 1},
 	on_drop = function() end
@@ -78,64 +76,8 @@ minetest.register_tool("default:pick_diamond", {
 			bed = bedcap,
 			wool = woolcap,
 		},
-		damage_groups = {fleshy=5},
 	},
 	groups = {pickaxe = 1},
-	on_drop = function() end
-})
-
---
--- Axes
---
-
-minetest.register_tool("default:axe_stone", {
-	description = S("Stone Axe"),
-	inventory_image = "default_tool_stoneaxe.png",
-	tool_capabilities = {
-		full_punch_interval = 1.2,
-		max_drop_level=0,
-		groupcaps={
-			choppy={times={[1]=7.00, [2]=6.0, [3]=5.30}, uses=0, maxlevel=3},
-			bed = bedcap,
-			wool = woolcap,
-		},
-		damage_groups = {fleshy=3},
-	},
-	groups = {axe = 1},
-	on_drop = function() end
-})
-
-minetest.register_tool("default:axe_steel", {
-	description = S("Steel Axe"),
-	inventory_image = "default_tool_steelaxe.png",
-	tool_capabilities = {
-		full_punch_interval = 1.0,
-		max_drop_level=1,
-		groupcaps={
-			choppy={times={[1]=6.50, [2]=5.40, [3]=5.00}, uses=0, maxlevel=3},
-			bed = bedcap,
-			wool = woolcap,
-		},
-		damage_groups = {fleshy=4},
-	},
-	groups = {axe = 1},
-	on_drop = function() end
-})
-
-minetest.register_tool("default:axe_diamond", {
-	description = S("Diamond Axe"),
-	inventory_image = "default_tool_diamondaxe.png",
-	tool_capabilities = {
-		full_punch_interval = 0.9,
-		max_drop_level=1,
-		groupcaps={
-			choppy={times={[1]=6.10, [2]=4.90, [3]=4.50}, uses=0, maxlevel=3},
-			bed = bedcap,
-			wool = woolcap,
-		},
-		damage_groups = {fleshy=7},
-	},
-	groups = {axe = 1},
 	on_drop = function() end
 })
 
@@ -164,7 +106,7 @@ minetest.register_tool("default:sword_stone", {
 	description = S("Stone Sword"),
 	inventory_image = "default_tool_stonesword.png",
 	tool_capabilities = {
-		full_punch_interval = 1.2,
+		full_punch_interval = 1,
 		max_drop_level=0,
 		groupcaps={
 			snappy={times={[2]=6.4, [3]=5.40}, uses=0, maxlevel=3},
@@ -181,7 +123,7 @@ minetest.register_tool("default:sword_steel", {
 	description = S("Steel Sword"),
 	inventory_image = "default_tool_steelsword.png",
 	tool_capabilities = {
-		full_punch_interval = 0.8,
+		full_punch_interval = 1,
 		max_drop_level=1,
 		groupcaps={
 			snappy={times={[1]=7.5, [2]=6.20, [3]=5.35}, uses=0, maxlevel=3},
@@ -198,7 +140,7 @@ minetest.register_tool("default:sword_diamond", {
 	description = S("Diamond Sword"),
 	inventory_image = "default_tool_diamondsword.png",
 	tool_capabilities = {
-		full_punch_interval = 0.7,
+		full_punch_interval = 1,
 		max_drop_level=1,
 		groupcaps={
 			snappy={times={[1]=6.90, [2]=5.90, [3]=5.20}, uses=0, maxlevel=3},

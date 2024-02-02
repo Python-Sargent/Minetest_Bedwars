@@ -208,6 +208,12 @@ function default.chest.register_chest(prefixed_name, d)
 			return inv:is_empty("main")
 		end
 		def.on_rightclick = function(pos, node, clicker)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			if inv:is_empty("main") then
+				meta:set_string("infotext", S("Chest")) -- do the basics of the on_construct function to repair broken chests
+				inv:set_size("main", 8*4)
+			end
 			local cn = clicker:get_player_name()
 
 			if default.chest.open_chests[cn] then

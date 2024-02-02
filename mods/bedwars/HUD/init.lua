@@ -80,7 +80,6 @@ end
 
 local on_joinplayer = function(player)
     HUD.init_HUD(player)
-    minetest.log("player joined")
 end
 
 minetest.register_on_joinplayer(function(player, last_login)

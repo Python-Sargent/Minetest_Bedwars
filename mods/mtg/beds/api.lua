@@ -130,7 +130,7 @@ function beds.register_bed(name, def)
 		pointable = false,
 		groups = groups,
 		sounds = def.sounds or default.node_sound_wood_defaults(),
-		drop = name .. "_bottom",
+		drop = "",
 		node_box = {
 			type = "fixed",
 			fixed = def.nodebox.top,

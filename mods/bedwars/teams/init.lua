@@ -9,13 +9,21 @@ local modpath = minetest.get_modpath("teams")
 teams.maps.current_map = {
 	name = "Galactuim",
 	teams = {
-		["red"] = {name = "red", spawn = {x=15, y=1, z=22}},
-		["blue"] = {name = "blue", spawn = {x=15, y=1, z=84}},
+		["red"] = {name = "red", spawn = {x=27, y=1, z=22}},
+		["blue"] = {name = "blue", spawn = {x=27, y=1, z=116}},
 	},
-	start = {x = 15, y = 0, z = 53},
+	start = {x = 27, y = 0, z = 69},
 	path = "",
 	init = function()
+		minetest.clear_objects({mode = "quick"})
 		minetest.place_schematic({x=0, y=-10, z=0}, modpath .. "/schematics/Galactium_Map.mts", nil, nil, true)
+		local node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, {x=55, y=35, z=137}), {
+			"item_spawners:forge_red", "item_spawners:forge_blue",
+		})
+
+		for i, pos in ipairs(node_positions) do
+			minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
+		end
 	end,
 }
 
@@ -73,7 +81,8 @@ end
 teams.init()
 
 teams.get_team = function(pn) -- get the team name of the player using player name
-	return teams.players[pn].team
+	if teams.players[pn] then return teams.players[pn].team end
+	return "" --missing player, just return empty string
 end
 
 local leave_callbacks = {}
@@ -106,9 +115,70 @@ teams.register_die_callback = function(name, callback)
 	die_callbacks[name] = {name = name, func = callback}
 end
 
-local run_die_callbacks = function(player, team)
+local run_die_callbacks = function(player, team, reason)
 	for i, callback in ipairs(die_callbacks) do
-		die_callbacks[callback].func(player, team)
+		die_callbacks[callback].func(player, team, reason)
+	end
+end
+
+teams.spawn = function(player)
+	player:respawn() -- respawn the player
+	player:set_hp(16, "respawn")
+	player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
+	local inv = player:get_inventory()
+	if not inv:contains_item("main", "default:sword_wood 1") then
+		inv:add_item("main", "default:sword_wood 1")
+	end
+end
+
+minetest.hud_replace_builtin("health", {
+	type = "statbar",
+	position = {x = 0.5, y = 1},
+	text = "heart.png",
+	text2 = "heart_gone.png",
+	number = core.PLAYER_MAX_HP_DEFAULT + 4,
+	item = core.PLAYER_MAX_HP_DEFAULT + 4,
+	direction = 0,
+	size = {x = 24, y = 24},
+	offset = {x = (-10 * 24) - 25, y = -(48 + 24 + 16)},
+})
+
+local countdown
+
+local countdown = function(len, func, player, hud)
+	player:hud_change(hud, "text", "Respawning in " .. len .. " seconds")
+	minetest.after(1, countdown, len - 1, func, player, hud)
+	--countdown(len -1, func, player, hud)
+end
+
+local countdown_HUD = function(player)
+	local hud = player:hud_add({ -- chud, short for Countdown HUD
+		hud_elem_type = "text",
+		position      = {x = 0.5, y = 0.45}, -- pos normalized (-1 to 1)
+		offset        = {x = 0,   y = 0}, -- ofset (px)
+		text          = "Respawning in 5 seconds",
+		alignment     = {x = 0, y = 0}, -- alignment normalized (-1 to 1)
+		scale         = {x = 100, y = 100}, -- scale (px)
+		number        = 0xFFFFFF, -- color (hex) using table to convert colortext to hex
+	})
+	return hud
+end
+
+teams.game_start = function()
+	teams.init()
+	teams.maps.current_map.init()
+	for i, pn in ipairs(teams.players) do
+		local pn = teams.players[pn].name
+		teams.on_joinplayer(pn)
+	end
+	minetest.chat_send_all("Game Started!")
+end
+
+teams.game_end = function(winning_team)
+	minetest.after(5, teams.game_start)
+	minetest.chat_send_all(winning_team .. " won")
+	for i, pn in ipairs(teams.teams[winning_team].players) do
+		minetest.chat_send_player("Your Team Won!")
 	end
 end
 
@@ -116,25 +186,56 @@ teams.respawn = function(player) -- custom respawn function
 	player:get_inventory():set_list("main", {})
 	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
 		player:respawn() -- respawn the player
-		player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
-		player:get_inventory():add_item("main", "default:sword_wood 1")
-	else
-		player:respawn() -- respawn the player
+		player:set_hp(16)
 		player:set_pos(teams.maps.current_map.start)
+		--local chud = countdown_HUD(player)
+		--countdown(5, teams.spawn, player, chud)
+		minetest.after(5, teams.spawn, player)
+	else
+		if teams.players[player:get_player_name()] and teams.get_team(player:get_player_name()) then
+			local players = teams.teams[teams.get_team(player:get_player_name())].players
+			if #players < 1 then
+				minetest.chat_send_all(minetest.colorize(teams.get_team(pn), "TEAM ELIMINATED"))
+			end
+			local teams_eliminated = 0
+			local winning_team = ""
+			for i, team in ipairs(teams.maps.current_map.teams) do
+				if teams.teams[team].has_bed ~= true then
+					teams_eliminated = teams_eliminated + 1
+				else
+					winning_team = team
+				end
+			end
+			if teams_eliminated >= #teams.maps.current_map.teams then
+				teams.game_end(winning_team)
+			end
+		end
+		player:respawn() -- respawn the player
+		player:set_hp(16)
+		player:set_pos(teams.maps.current_map.start)
+		teams.teams[teams.get_team(player:get_player_name())].players[player:get_player_name()] = nil -- remove player from team
 	end
 end
 
 teams.on_dieplayer = function(pn, reason) -- a player died, update score and respawn
-	run_die_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn))
-	reason = reason or "died"
-	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. minetest.colorize("pink", " " .. reason))
+	local deathinfo = "died"
+	if reason and reason.type == "punch" and reason.object and reason.object:is_player() then
+		deathinfo = "was killed by " .. minetest.colorize(teams.get_team(reason.object:get_player_name()), reason.object:get_player_name())
+		teams.players[reason.object:get_player_name()].kills = teams.players[reason.object:get_player_name()].kills + 1
+		teams.teams[teams.get_team(reason.object:get_player_name())].kills = teams.teams[teams.get_team(reason.object:get_player_name())].kills + 1
+	end
+	run_die_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn), deathinfo)
+	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. minetest.colorize("pink", " " .. deathinfo))
 	teams.players[pn].deaths = teams.players[pn].deaths + 1 -- increment player deaths
 	teams.teams[teams.get_team(pn)].deaths = teams.teams[teams.get_team(pn)].deaths + 1 -- increment total team deaths
 	teams.respawn(minetest.get_player_by_name(pn))
 end
 
 teams.join_team = function(pn, team) -- use to make o player join a team
-	teams.teams[team].players[pn] = pn
+	if teams.players[pn] and teams.get_team(pn) then -- make sure we're not removing nonexistent player
+		teams.teams[teams.get_team(pn)].players[pn] = nil -- remove player from old team
+	end
+	teams.teams[team].players[pn] = pn -- add player to new team
 	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0}
 	local player = minetest.get_player_by_name(pn)
 	run_join_callbacks(player, team)
@@ -143,10 +244,11 @@ teams.join_team = function(pn, team) -- use to make o player join a team
 end
 
 teams.on_joinplayer = function(pn) -- when joining a match
-	minetest.get_player_by_name(pn):set_properties({nametag = ""})
+	minetest.get_player_by_name(pn):set_properties({nametag_color = {a=0, r=255, g=255, b=255}})
+	minetest.get_player_by_name(pn):set_hp(16)
 	--default.chest.enderchest.create_inventory(pn)
 	local has_joined = false
-	for tn, mapteam in pairs(teams.maps.current_map.teams) do -- for each team show team name and team stats
+	for tn, mapteam in pairs(teams.maps.current_map.teams) do 
 		local pc = 0
 		for pn, player in pairs(teams.teams[tn].players) do -- count how many players are in the team
 			pc = pc + 1
@@ -189,7 +291,7 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 end
 
 minetest.register_on_dieplayer(function(player, reason) -- trigger teams.on_dieplayer()
-	teams.on_dieplayer(player:get_player_name())
+	teams.on_dieplayer(player:get_player_name(), reason)
 end)
 
 minetest.register_on_joinplayer(function(player, last_login) -- trigger teams.on_joinplayer()
@@ -310,6 +412,31 @@ minetest.register_chatcommand("teams", { -- chatcommand to control teams (must b
 	end,
 })
 
+minetest.register_chatcommand("t", { -- chatcommand for team chat
+    privs = {
+        interact = true,
+		shout = true,
+    },
+	description = "Chat to team only.\nUsage: /t <message>",
+    func = function(name, param)
+		local parts = param:split(" ")
+		local msg = parts[1]
+		for i, player in ipairs(teams.teams[teams.get_team(name)].players) do
+			local pn = teams.players[player].name
+			minetest.chat_send_player(pn, "<" .. pn  .. "> " .. msg)
+		end
+	end,
+})
+
+minetest.register_chatcommand("start", { -- chatcommand for starting/restarting the game
+    privs = {
+		server = true,
+    },
+	description = "Start game.\nUsage: /start",
+    func = function(name, param)
+		teams.game_start()
+	end,
+})
 --[[
 minetest.register_chatcommand("tstat", { -- show stats for your team
     description = "Show your team's stats",

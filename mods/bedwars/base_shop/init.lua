@@ -68,9 +68,11 @@ shop.register_shop = function(def)
 								 "item_image_button[0,1;1,1;default:stone;stone;16]" ..
 								 "item_image_button[1,1;1,1;wool:" .. teams.get_team(name) .. ";wool;16]" ..
 								 "item_image_button[2,1;1,1;default:sandstone;sandstone;12]" ..
+								 "item_image_button[3,1;1,1;default:obsidian;obsidian;4]" ..
 								 "item_image_button[0,2;1,1;tnt:tnt;tnt;1]" ..
-								 "item_image_button[1,2;1,1;fireball:fireball;fireball;1]" ..
-								 "item_image_button[2,2;1,1;enderpearl:ender_pearl;enderpearl;1]"
+								 "item_image_button[1,2;1,1;turret:turret;turret;1]" ..
+								 "item_image_button[2,2;1,1;fireball:fireball;fireball;1]" ..
+								 "item_image_button[3,2;1,1;enderpearl:ender_pearl;enderpearl;1]"
 			local formspec_mid2 = "tooltip[stone_sword;Stone Sword\nCost: 10 Steel;grey;white]" ..
 								  "tooltip[steel_sword;Steel Sword\nCost: 7 Gold;grey;gold]" ..
 								  "tooltip[diamond_sword;Diamond Sword\nCost: 4 Mese;grey;lightgreen]" ..
@@ -82,6 +84,7 @@ shop.register_shop = function(def)
 								  "tooltip[stone;Stone\nCost: 4 Gold;grey;gold]" ..
 								  "tooltip[obsidian;Obsidian\nCost: 4 Mese;grey;lightgreen]" ..
 								  "tooltip[tnt;TNT\nCost: 4 Gold;grey;gold]" ..
+								  "tooltip[turret;Defensive Turret\nCost: 120 Steel;grey;white]" ..
 								  "tooltip[fireball;Fireball\nCost: 40 Steel;grey;white]" ..
 								  "tooltip[enderpearl;Enderpearl\nCost: 4 Mese;grey;lightgreen]"
 
@@ -133,6 +136,9 @@ shop.register_shop = function(def)
 		if fields.tnt then
 			shop.buy_item(inv, player, "default:gold_ingot 4", "tnt:tnt", nil, "4 Gold Ingot")
 		end
+		if fields.turret then
+			shop.buy_item(inv, player, "default:steel_ingot 120", "turret:turret", nil, "120 Steel Ingot")
+		end
 		if fields.fireball then
 			shop.buy_item(inv, player, "default:steel_ingot 40", "fireball:fireball", nil, "40 Steel Ingot")
 		end
@@ -163,6 +169,27 @@ local upgrades = {
 		player:set_hp(max_hp)
 		minetest.log("HP Extra +2 removed from " .. player:get_player_name())
 	end, name = "HP Extra +2"},
+	["forge_1"] = {add = function(player) -- need to make this team specific
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl2
+		minetest.log("Forge I added to " .. teams.get_team(player:get_player_name()))
+	end, remove = function(player)
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
+		minetest.log("Forge I removed from " .. teams.get_team(player:get_player_name()))
+	end, name = "Forge I"},
+	["forge_2"] = {add = function(player)
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl3
+		minetest.log("Forge II added to " .. teams.get_team(player:get_player_name()))
+	end, remove = function(player)
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
+		minetest.log("Forge II removed from " .. teams.get_team(player:get_player_name()))
+	end, name = "Forge II"},
+	["forge_3"] = {add = function(player)
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl4
+		minetest.log("Forge III added to " .. teams.get_team(player:get_player_name()))
+	end, remove = function(player)
+		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
+		minetest.log("Forge III removed from " .. teams.get_team(player:get_player_name()))
+	end, name = "Forge III"},
 }
 
 shop.get_upgrade = function(inv, player, cost, upgrade, reqtext)
@@ -226,8 +253,14 @@ shop.register_upgrade_shop = function(def)
 			local name = clicker:get_player_name()
 			local formspec_begin = "size[8,9]"
 			local formspec_end = "list[current_player;main;0,5;8,4;]"
-			local formspec_mid = "image_button[0,0;1,1;heart.png;hp_extra;HP+]"
-			local formspec_mid2 = "tooltip[hp_extra;+2 HP\nCost: 1 Diamond;grey;lightgreen]"
+			local formspec_mid = "image_button[0,0;1,1;heart.png;hp_extra;HP+]" ..
+								 "image_button[1,0;1,1;default_steel_ingot.png;forge_1;Forge I]" ..
+								 "image_button[2,0;1,1;default_gold_ingot.png;forge_2;Forge II]" ..
+								 "image_button[3,0;1,1;default_mese_crystal.png;forge_3;Forge III]"
+			local formspec_mid2 = "tooltip[hp_extra;+2 HP\nCost: 1 Diamond;grey;lightgreen]" ..
+								  "tooltip[forge_1;Forge I\nCost: 4 Diamond;grey;lightgreen]" ..
+								  "tooltip[forge_2;Forge II\nCost: 8 Diamond;grey;lightgreen]" ..
+								  "tooltip[forge_3;Forge III\nCost: 16 Diamond;grey;lightgreen]"
 
 			if name then
 				minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
@@ -245,6 +278,12 @@ shop.register_upgrade_shop = function(def)
 		local inv = player:get_inventory()
 		if fields.hp_extra then
 			shop.get_upgrade(inv, player, "default:diamond 1", "hp_extra", "1 Diamond")
+		elseif fields.forge_1 then
+			shop.get_upgrade(inv, player, "default:diamond 4", "forge_1", "4 Diamond")
+		elseif fields.forge_2 then
+			shop.get_upgrade(inv, player, "default:diamond 8", "forge_2", "8 Diamond")
+		elseif fields.forge_3 then
+			shop.get_upgrade(inv, player, "default:diamond 16", "forge_3", "16 Diamond")
 		end
 	end)
 end
