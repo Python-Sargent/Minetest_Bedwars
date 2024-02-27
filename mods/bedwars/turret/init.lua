@@ -7,8 +7,8 @@ minetest.register_node("turret:turret", {
         "turret_bottom.png",
         "turret_side.png",
         "turret_side.png",
-        "turret_front.png",
         "turret_side.png",
+        "turret_front.png",
     },
     drawtype = "nodebox",
     node_box = {

@@ -1,17 +1,17 @@
-fireball = {}
-local t = minetest.get_translator("fireball")
+bridge_egg = {}
+local t = minetest.get_translator("bridge_egg")
 local callbacks = {}
 
-minetest.register_craftitem("fireball:fireball", {
-  description = ("Fireball"),
-  inventory_image = "fireball.png",
+minetest.register_craftitem("bridge_egg:bridge_egg", {
+  description = ("Bridge Egg"),
+  inventory_image = "bridge_egg.png",
   stack_max = 16,
   on_use =
     function(_, player, pointed_thing)
-      local throw_starting_pos = vector.add({x=0, y=1.5, z=0}, player:get_pos())
-      local ender_pearl = minetest.add_entity(throw_starting_pos, "fireball:thrown_fireball", player:get_player_name())
+      local throw_starting_pos = vector.add({x=0, y=-1.5, z=0}, player:get_pos())
+      local ender_pearl = minetest.add_entity(throw_starting_pos, "bridge_egg:thrown_bridge_egg", player:get_player_name())
 
-      minetest.after(0, function() player:get_inventory():remove_item("main", "fireball:fireball") end)
+      minetest.after(0, function() player:get_inventory():remove_item("main", "bridge_egg:bridge_egg") end)
     
       minetest.sound_play("fireball_throw", {max_hear_distance = 15, pos = player:get_pos()})
     end,
@@ -19,43 +19,38 @@ minetest.register_craftitem("fireball:fireball", {
 })
 
 -- entity declaration
-local thrown_fireball = {
+local thrown_bridge_egg = {
   initial_properties = {
     hp_max = 1,
     physical = true,
-    collide_with_objects = true,
+    collide_with_objects = false,
     collisionbox = {-0.4, -0.4, -0.4, 0.4, 0.4, 0.4},
     visual = "wielditem",
     visual_size = {x = 0.5, y = 0.5},
-    textures = {"fireball:fireball"},
+    textures = {"bridge_egg:bridge_egg"},
     spritediv = {x = 1, y = 1},
     initial_sprite_basepos = {x = 0, y = 0},
     pointable = false,
-    speed = 35,
-    gravity = 0,
-    lifetime = 60
+    speed = 100,
+    gravity = 10,
+    lifetime = 60,
   },
+  start_pos = vector.new(),
   player_name = ""
 }
 
-function thrown_fireball:on_step(dtime, moveresult)  
+function thrown_bridge_egg:on_step(dtime, moveresult)  
   local collided_with_node = moveresult.collisions[1] and moveresult.collisions[1].type == "node"
-  local collided_with_entity = moveresult.collisions[1] and moveresult.collisions[1].type == "entity"
 
-  if collided_with_node or collided_with_entity then
+  if collided_with_node then
     
-    tnt.boom(moveresult.collisions[1].node_pos, {radius = 3, damage_radius = 1})
-
-    for i=1, #callbacks do
-      local node = minetest.get_node(moveresult.collisions[1].node_pos)
-      callbacks[i](node)
-    end
+    --create the bridge
 
     self.object:remove()
   end
 end
 
-function thrown_fireball:on_activate(staticdata)
+function thrown_bridge_egg:on_activate(staticdata)
   if not staticdata or not minetest.get_player_by_name(staticdata) then
     self.object:remove()
     return
@@ -78,9 +73,9 @@ function thrown_fireball:on_activate(staticdata)
   minetest.after(self.initial_properties.lifetime, function() self.object:remove() end)
 end
 
-minetest.register_entity("fireball:thrown_fireball", thrown_fireball)
+minetest.register_entity("bridge_egg:thrown_bridge_egg", thrown_bridge_egg)
 
--- on_explode(hit_node)
-function fireball.on_explode(func)
-  table.insert(callbacks, func)
+-- on_bridge(hit_node)
+function bridge_egg.on_bridge(pos1, pos2, team)
+  
 end

@@ -158,38 +158,53 @@ shop.register_shop({
 local upgraded_players = {}
 
 local upgrades = {
-	["hp_extra"] = {add = function(player)
+	["hp_extra"] = {
+	add = function(player)
 		local max_hp = 24 -- 2 extra hearts
 		player:set_properties({hp_max = max_hp})
 		player:set_hp(max_hp)
 		minetest.log("HP Extra +2 added to " .. player:get_player_name())
-	end, remove = function(player)
+	end,
+	remove = function(player)
 		local max_hp = 20 -- normal health
 		player:set_properties({hp_max = max_hp})
 		player:set_hp(max_hp)
 		minetest.log("HP Extra +2 removed from " .. player:get_player_name())
-	end, name = "HP Extra +2"},
-	["forge_1"] = {add = function(player) -- need to make this team specific
+	end,
+	name = "HP Extra +2"},
+
+	["forge_1"] = {
+	add = function(player) -- need to make this team specific
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl2
 		minetest.log("Forge I added to " .. teams.get_team(player:get_player_name()))
-	end, remove = function(player)
+	end,
+	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
 		minetest.log("Forge I removed from " .. teams.get_team(player:get_player_name()))
-	end, name = "Forge I"},
-	["forge_2"] = {add = function(player)
+	end,
+	name = "Forge I"},
+
+	["forge_2"] = {
+	add = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl3
 		minetest.log("Forge II added to " .. teams.get_team(player:get_player_name()))
-	end, remove = function(player)
+	end,
+	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
 		minetest.log("Forge II removed from " .. teams.get_team(player:get_player_name()))
-	end, name = "Forge II"},
-	["forge_3"] = {add = function(player)
+	end,
+	name = "Forge II"},
+
+	["forge_3"] = {
+	add = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl4
 		minetest.log("Forge III added to " .. teams.get_team(player:get_player_name()))
-	end, remove = function(player)
+	end,
+	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
 		minetest.log("Forge III removed from " .. teams.get_team(player:get_player_name()))
-	end, name = "Forge III"},
+	end,
+	name = "Forge III"},
 }
 
 shop.get_upgrade = function(inv, player, cost, upgrade, reqtext)

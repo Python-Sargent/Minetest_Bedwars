@@ -13,6 +13,16 @@ HUD.colors = {
 
 HUD.players = {}
 
+HUD.create_text = function(type, player)
+    if type == "team" then
+        return "Team: " .. teams.get_team(player:get_player_name())
+    elseif type == "kills" then
+        return "Kills: " .. teams.players[player:get_player_name()].kills .. " / " .. teams.teams[teams.get_team(player:get_player_name())].kills
+    elseif type == "deaths" then
+        return "Deaths: " .. teams.players[player:get_player_name()].deaths .. " / " .. teams.teams[teams.get_team(player:get_player_name())].deaths
+    end
+end
+
 HUD.init_HUD = function(player)
     local bg = player:hud_add({
         hud_elem_type = "image",
@@ -26,7 +36,7 @@ HUD.init_HUD = function(player)
         hud_elem_type = "text",
         position      = {x = 1, y = 0.025}, -- pos normalized (-1 to 1)
         offset        = {x = -64,   y = 0}, -- ofset (px)
-        text          = "Team: " .. teams.get_team(player:get_player_name()),
+        text          = HUD.create_text("team", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
@@ -35,7 +45,7 @@ HUD.init_HUD = function(player)
         hud_elem_type = "text",
         position      = {x = 1, y = 0.05}, -- pos normalized (-1 to 1)
         offset        = {x = -64,   y = 0}, -- ofset (px)
-        text          = "Kills: " .. teams.players[player:get_player_name()].kills .. " / " .. teams.teams[teams.get_team(player:get_player_name())].kills,
+        text          = HUD.create_text("kills", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
@@ -44,7 +54,7 @@ HUD.init_HUD = function(player)
         hud_elem_type = "text",
         position      = {x = 1, y = 0.075}, -- pos normalized (-1 to 1)
         offset        = {x = -64,   y = 0}, -- ofset (px)
-        text          = "Deaths: " .. teams.players[player:get_player_name()].deaths .. " / " .. teams.teams[teams.get_team(player:get_player_name())].deaths,
+        text          = HUD.create_text("deaths", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
@@ -54,9 +64,9 @@ end
 
 HUD.update_HUD = function(player)
     local hudp = HUD.players[player:get_player_name()]
-    player:hud_change(hudp.teamhud, "text", "Team: " .. teams.get_team(player:get_player_name()))
-    player:hud_change(hudp.killhud, "text", "Kills: " .. teams.players[player:get_player_name()].kills .. " / " .. teams.teams[teams.get_team(player:get_player_name())].kills)
-    player:hud_change(hudp.deathud, "text", "Deaths: " .. teams.players[player:get_player_name()].deaths .. " / " .. teams.teams[teams.get_team(player:get_player_name())].deaths)
+    player:hud_change(hudp.teamhud, "text", HUD.create_text("team", player))
+    player:hud_change(hudp.killhud, "text", HUD.create_text("kills", player))
+    player:hud_change(hudp.deathud, "text", HUD.create_text("deaths", player))
     minetest.log("updated hud for player: " .. player.name)
 end
 
@@ -71,9 +81,9 @@ end
 --player:hud_change(idx, "text", "New Text")
 
 HUD.update_all = function(player)
-    minetest.log("updating hud")
+    minetest.log("updating hud") -- for debug only
     for i, player in ipairs(teams.players) do
-        minetest.log("updating hud for player: " .. player.name)
+        minetest.log("updating hud for player: " .. player.name) -- for debug only
         HUD.update_HUD(minetest.get_player_by_name(player.name))
     end
 end
@@ -123,16 +133,3 @@ minetest.register_chatcommand("hud", {
 		end
 	end,
 })
-
---[[
-    local param2 = parts[2]
-    if param2 == "all" then
-        shop.remove_upgrades(minetest.get_player_by_name(name))
-        return true, "Removed all upgrades"
-    elseif shop.find_upgrade(param2) then
-        shop.remove_upgrade(minetest.get_player_by_name(name), param2)
-        return true, "Removed upgrade: " .. param2
-    else
-        return false, "Must give an upgrade to remove"
-    end
-]]
