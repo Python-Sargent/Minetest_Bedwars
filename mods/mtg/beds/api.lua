@@ -34,6 +34,7 @@ function beds.register_bed(name, def)
 		paramtype2 = "facedir",
 		is_ground_content = false,
 		stack_max = 1,
+		drop = "",
 		drops = "",
 		groups = def.groups,
 		_team = def.team,
@@ -117,7 +118,7 @@ function beds.register_bed(name, def)
 		
 		can_dig = def.can_dig,
 		
-		on_blast = def.on_blast,
+		on_blast = function() end,
 	})
 
 	minetest.register_node(name .. "_top", {
@@ -131,12 +132,13 @@ function beds.register_bed(name, def)
 		groups = groups,
 		sounds = def.sounds or default.node_sound_wood_defaults(),
 		drop = "",
+		drops = "",
 		node_box = {
 			type = "fixed",
 			fixed = def.nodebox.top,
 		},
 		_team = def.team,
-		on_blast = def.on_blast,
+		on_blast = function() end,
 		on_destruct = function(pos)
 			destruct_bed(pos, 2)
 		end,

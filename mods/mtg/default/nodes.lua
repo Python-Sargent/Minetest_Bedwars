@@ -122,7 +122,7 @@ minetest.register_node("default:cobble", {
 	groups = {map_node = 1, stone = 2},
 	sounds = default.node_sound_stone_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:stonebrick", {
@@ -134,7 +134,7 @@ minetest.register_node("default:stonebrick", {
 	groups = {map_node = 1, stone = 1},
 	sounds = default.node_sound_stone_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:sandstone", {
@@ -153,7 +153,7 @@ minetest.register_node("default:sandstonebrick", {
 	groups = {map_node = 1},
 	sounds = default.node_sound_stone_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:obsidian", {
@@ -174,7 +174,7 @@ minetest.register_node("default:dirt", {
 	groups = {map_node = 1, soil = 1},
 	sounds = default.node_sound_dirt_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:dirt_with_grass", {
@@ -187,7 +187,7 @@ minetest.register_node("default:dirt_with_grass", {
 		footstep = {name = "default_grass_footstep", gain = 0.25},
 	}),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("default:ice", {
@@ -198,12 +198,8 @@ minetest.register_node("default:ice", {
 	groups = {map_node = 1, cools_lava = 1, slippery = 3},
 	sounds = default.node_sound_ice_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
-
---
--- Mineral Blocks
---
 
 --
 -- Trees
@@ -231,7 +227,7 @@ minetest.register_node("default:wood", {
 	groups = {map_node = 1, wood = 1},
 	sounds = default.node_sound_wood_defaults(),
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 --
@@ -340,9 +336,9 @@ minetest.register_node("default:lava_source", {
 			backface_culling = false,
 			animation = {
 				type = "vertical_frames",
-				aspect_w = 16,
-				aspect_h = 16,
-				length = 3.0,
+				aspect_w = 32,
+				aspect_h = 32,
+				length = 5.0,
 			},
 		},
 		{
@@ -350,9 +346,9 @@ minetest.register_node("default:lava_source", {
 			backface_culling = true,
 			animation = {
 				type = "vertical_frames",
-				aspect_w = 16,
-				aspect_h = 16,
-				length = 3.0,
+				aspect_w = 32,
+				aspect_h = 32,
+				length = 4.0,
 			},
 		},
 	},
@@ -386,8 +382,8 @@ minetest.register_node("default:lava_flowing", {
 			backface_culling = false,
 			animation = {
 				type = "vertical_frames",
-				aspect_w = 16,
-				aspect_h = 16,
+				aspect_w = 32,
+				aspect_h = 32,
 				length = 3.3,
 			},
 		},
@@ -396,8 +392,8 @@ minetest.register_node("default:lava_flowing", {
 			backface_culling = true,
 			animation = {
 				type = "vertical_frames",
-				aspect_w = 16,
-				aspect_h = 16,
+				aspect_w = 32,
+				aspect_h = 32,
 				length = 3.3,
 			},
 		},
@@ -426,6 +422,72 @@ minetest.register_node("default:lava_flowing", {
 --
 -- Tools / "Advanced" crafting / Non-"natural"
 --
+
+local function register_sign(material, desc, def)
+	minetest.register_node("default:sign_wall_" .. material, {
+		description = desc,
+		drawtype = "nodebox",
+		tiles = {"default_sign_wall_" .. material .. ".png"},
+		inventory_image = "default_sign_" .. material .. ".png",
+		wield_image = "default_sign_" .. material .. ".png",
+		paramtype = "light",
+		paramtype2 = "wallmounted",
+		sunlight_propagates = true,
+		is_ground_content = false,
+		walkable = false,
+		use_texture_alpha = "opaque",
+		node_box = {
+			type = "wallmounted",
+			wall_top    = {-0.4375, 0.4375, -0.3125, 0.4375, 0.5, 0.3125},
+			wall_bottom = {-0.4375, -0.5, -0.3125, 0.4375, -0.4375, 0.3125},
+			wall_side   = {-0.5, -0.3125, -0.4375, -0.4375, 0.3125, 0.4375},
+		},
+		groups = def.groups,
+		legacy_wallmounted = true,
+		sounds = def.sounds,
+		can_dig = default.can_dig_map,
+		on_blast = function() end,
+		on_construct = function(pos)
+			local meta = minetest.get_meta(pos)
+			meta:set_string("formspec", "field[text;;${text}]")
+		end,
+		on_receive_fields = function(pos, formname, fields, sender)
+			local player_name = sender:get_player_name()
+			if minetest.is_protected(pos, player_name) then
+				minetest.record_protection_violation(pos, player_name)
+				return
+			end
+			local text = fields.text
+			if not text then
+				return
+			end
+			if #text > 512 then
+				minetest.chat_send_player(player_name, S("Text too long"))
+				return
+			end
+			text = text:gsub("[%z-\8\11-\31\127]", "") -- strip naughty control characters (keeps \t and \n)
+			default.log_player_action(sender, ("wrote %q to the sign at"):format(text), pos)
+			local meta = minetest.get_meta(pos)
+			meta:set_string("text", text)
+
+			if #text > 0 then
+				meta:set_string("infotext", S('"@1"', text))
+			else
+				meta:set_string("infotext", '')
+			end
+		end,
+	})
+end
+
+register_sign("wood", S("Wooden Sign"), {
+	sounds = default.node_sound_wood_defaults(),
+	groups = {choppy = 2, attached_node = 1, flammable = 2, oddly_breakable_by_hand = 3}
+})
+
+register_sign("steel", S("Steel Sign"), {
+	sounds = default.node_sound_metal_defaults(),
+	groups = {cracky = 2, attached_node = 1}
+})
 
 minetest.register_node("default:ladder", {
 	description = S("Ladder"),
@@ -497,7 +559,7 @@ minetest.register_node("default:meselamp", {
 
 default.register_mesepost("default:mese_post_light", {
 	description = S("Mese Post Light"),
-	texture = "default_fence_wood.png",
+	texture = "default_wood.png",
 	material = "default:wood",
 })
 

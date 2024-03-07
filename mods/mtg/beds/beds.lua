@@ -41,7 +41,6 @@ for i = 1, #dyes do
 		},
 		selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.0625, 1.5},
 		groups = {bed = 1, [color_group] = 1},
-		on_blast = function() end,
 		can_dig = function(pos, player) 
 			if teams.get_team(player:get_player_name()) ~= beds.get_team(pos) and beds.get_team(pos) ~= nil then
 				return true

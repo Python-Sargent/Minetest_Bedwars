@@ -26,12 +26,13 @@ minetest.register_node("turret:turret", {
     on_timer = function(pos, elapsed)
         minetest.set_node(pos, {name="air"}) --remove turret
     end,
+    on_blast = function() end
 })
 
 minetest.register_abm({
     label = "Turret Damage",
     nodenames = {"turret:turret"},
-    interval = 1,
+    interval = 0.1,
     chance = 1,
     catch_up = false,
     action = function(pos, node)
@@ -51,7 +52,14 @@ minetest.register_abm({
             local node_meta = minetest.get_meta(pos)
             if teams.get_team(closest_name) ~= teams.get_team(node_meta:get_string("owner")) then
                 local player = minetest.get_player_by_name(closest_name)
-                player:set_hp(player:get_hp() - 2)
+                tnt.boom(player:get_pos(), {radius = 2, damage_radius = 4})
+                player:add_velocity(vector.new(0, 5, 0))
+                --player:set_hp(player:get_hp() - 2)
+                --local fireball = minetest.add_entity(vector.add(pos, {x=0, y=1.5, z=0}), "fireball:thrown_fireball", closest_name)
+                --[[local speed = 5
+                local lookdir = vector.normalize(vector.direction(pos, minetest.get_player_by_name(closest_name):get_pos()))
+                minetest.log("Turret Lookdir: " .. vector.to_string(lookdir))
+                local fireball = minetest.add_entity(vector.add(pos, {x=0,y=1,z=0}), "fireball:fireball", lookdir.x * speed .. " " .. lookdir.y * speed .. " " .. lookdir.z * speed)]]
             end
         end
     end,

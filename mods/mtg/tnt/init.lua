@@ -15,7 +15,7 @@ end
 -- loss probabilities array (one in X will be lost)
 local loss_prob = {}
 
-local tnt_radius = tonumber(minetest.settings:get("tnt_radius") or 4)
+local tnt_radius = tonumber(minetest.settings:get("tnt_radius") or 3)
 
 -- Fill a list with data for content IDs, after all nodes are registered
 local cid_data = {}
@@ -161,7 +161,7 @@ local function entity_physics(pos, radius, drops)
 		local damage = (0.5 / dist) * radius
 		if obj:is_player() then
 			local dir = vector.normalize(vector.subtract(obj_pos, pos))
-			local moveoff = vector.multiply(dir, 2 / dist * radius)
+			local moveoff = vector.multiply(dir, 4 / dist * radius)
 			obj:add_velocity(moveoff)
 
 			obj:set_hp(obj:get_hp() - damage)
@@ -402,7 +402,7 @@ end
 
 function tnt.boom(pos, def)
 	def = def or {}
-	def.radius = def.radius or 1
+	def.radius = def.radius or 3
 	def.damage_radius = def.damage_radius or def.radius / 2
 	local meta = minetest.get_meta(pos)
 	local owner = meta:get_string("owner")

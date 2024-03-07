@@ -8,18 +8,18 @@ local replace_item = function(inv, type, level)
 		if inv:contains_item("main", "default:sword_wood") then inv:remove_item("main", ItemStack("default:sword_wood")) end
 		if inv:contains_item("main", "default:sword_stone") then inv:remove_item("main", ItemStack("default:sword_stone")) end
 		if inv:contains_item("main", "default:sword_steel") then inv:remove_item("main", ItemStack("default:sword_steel")) end
-	end
-
-	if type == "pick" then
+	elseif type == "pick" then
 		if inv:contains_item("main", "default:pick_diamond") then inv:remove_item("main", ItemStack("default:pick_diamond")) end
 		if inv:contains_item("main", "default:pick_stone") then inv:remove_item("main", ItemStack("default:pick_stone")) end
 		if inv:contains_item("main", "default:pick_steel") then inv:remove_item("main", ItemStack("default:pick_steel")) end
-	end
-
-	if type == "axe" then
+	elseif type == "axe" then
 		if inv:contains_item("main", "default:axe_diamond") then inv:remove_item("main", ItemStack("default:axe_diamond")) end
 		if inv:contains_item("main", "default:axe_stone") then inv:remove_item("main", ItemStack("default:axe_stone")) end
 		if inv:contains_item("main", "default:axe_steel") then inv:remove_item("main", ItemStack("default:axe_steel")) end
+	elseif type == "shears" then
+		if inv:contains_item("main", "default:shears") then inv:remove_item("main", ItemStack("default:shears")) end
+	elseif type == "knockback_stick" then
+		if inv:contains_item("main", "default:knockback_stick") then inv:remove_item("main", ItemStack("default:knockback_stick")) end
 	end
 end
 
@@ -65,10 +65,13 @@ shop.register_shop = function(def)
 								 "item_image_button[3,0;1,1;default:pick_stone;stone_pick;1]" ..
 								 "item_image_button[4,0;1,1;default:pick_steel;steel_pick;1]" ..
 								 "item_image_button[5,0;1,1;default:pick_diamond;diamond_pick;1]" ..
+								 "item_image_button[6,0;1,1;default:shears;shears;1]" ..
+								 "item_image_button[7,0;1,1;default:knockback_stick;knockback_stick;1]" ..
 								 "item_image_button[0,1;1,1;default:stone;stone;16]" ..
 								 "item_image_button[1,1;1,1;wool:" .. teams.get_team(name) .. ";wool;16]" ..
 								 "item_image_button[2,1;1,1;default:sandstone;sandstone;12]" ..
 								 "item_image_button[3,1;1,1;default:obsidian;obsidian;4]" ..
+								 "item_image_button[4,1;1,1;blastproof_glass:" .. teams.get_team(name) .. ";blastproof_glass;4]" ..
 								 "item_image_button[0,2;1,1;tnt:tnt;tnt;1]" ..
 								 "item_image_button[1,2;1,1;turret:turret;turret;1]" ..
 								 "item_image_button[2,2;1,1;fireball:fireball;fireball;1]" ..
@@ -79,21 +82,20 @@ shop.register_shop = function(def)
 								  "tooltip[stone_pick;Stone Pickaxe\nCost: 6 Steel;grey;white]" ..
 								  "tooltip[steel_pick;Steel Pickaxe\nCost: 4 Gold;grey;gold]" ..
 								  "tooltip[diamond_pick;Diamond Pickaxe\nCost: 1 Mese;grey;lightgreen]" ..
+								  "tooltip[shears;Shears\nCost: 4 Steel Ingot;grey;white]" ..
+								  "tooltip[knockback_stick;Knockback Stick\nCost: 5 Gold Ingot;grey;gold]" ..
 								  "tooltip[wool;" .. teams.get_team(name) ..  " Wool\nCost: 4 Steel;grey;white]" ..
 								  "tooltip[sandstone;Sandstone\nCost: 24 Steel;grey;white]" ..
 								  "tooltip[stone;Stone\nCost: 4 Gold;grey;gold]" ..
 								  "tooltip[obsidian;Obsidian\nCost: 4 Mese;grey;lightgreen]" ..
+								  "tooltip[blastproof_glass;Blastproof Glass\nCost: 4 Steel Ingot;grey;white]" ..
 								  "tooltip[tnt;TNT\nCost: 4 Gold;grey;gold]" ..
 								  "tooltip[turret;Defensive Turret\nCost: 120 Steel;grey;white]" ..
 								  "tooltip[fireball;Fireball\nCost: 40 Steel;grey;white]" ..
 								  "tooltip[enderpearl;Enderpearl\nCost: 4 Mese;grey;lightgreen]"
 
 			--item_image_button[0,0;1,1;default:sword_diamond;diamond_sword;Sword]
-			if name then
-				minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
-			else
-				minetest.chat_send_all("Player " .. name .. " attempted to use shop >> WARNING: variable 'name' is nil in function on_rightclick")
-			end
+			minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
 		end,
 	})
 
@@ -121,6 +123,12 @@ shop.register_shop = function(def)
 		if fields.stone_pick then
 			shop.buy_item(inv, player, "default:steel_ingot 6", "default:pick_stone", "pick", "6 Steel Ingot")
 		end
+		if fields.shears then
+			shop.buy_item(inv, player, "default:steel_ingot 4", "default:shears", "shears", "4 Steel Ingot")
+		end
+		if fields.knockback_stick then
+			shop.buy_item(inv, player, "default:gold_ingot 5", "default:knockback_stick", "knockback_stick", "5 Gold Ingot")
+		end
 		if fields.wool then
 			shop.buy_item(inv, player, "default:steel_ingot 4", "wool:" .. teams.get_team(player:get_player_name()) .." 16", nil, "4 Steel Ingot")
 		end
@@ -132,6 +140,9 @@ shop.register_shop = function(def)
 		end
 		if fields.obsidian then
 			shop.buy_item(inv, player, "default:mese_crystal 4", "default:obsidian 4", nil, "4 Mese Crystal")
+		end
+		if fields.blastproof_glass then
+			shop.buy_item(inv, player, "default:steel_ingot", "blastproof_glass:" .. teams.get_team(player:get_player_name()) .." 4", nil, "4 Steel Ingot")
 		end
 		if fields.tnt then
 			shop.buy_item(inv, player, "default:gold_ingot 4", "tnt:tnt", nil, "4 Gold Ingot")
@@ -162,47 +173,53 @@ local upgrades = {
 	add = function(player)
 		local max_hp = 24 -- 2 extra hearts
 		player:set_properties({hp_max = max_hp})
-		player:set_hp(max_hp)
-		minetest.log("HP Extra +2 added to " .. player:get_player_name())
+		player:set_hp(math.min(player:get_hp() + 4, max_hp))
+		--minetest.log("HP Extra +2 added to " .. player:get_player_name())
 	end,
 	remove = function(player)
 		local max_hp = 20 -- normal health
 		player:set_properties({hp_max = max_hp})
 		player:set_hp(max_hp)
-		minetest.log("HP Extra +2 removed from " .. player:get_player_name())
+		--minetest.log("HP Extra +2 removed from " .. player:get_player_name())
 	end,
 	name = "HP Extra +2"},
 
 	["forge_1"] = {
 	add = function(player) -- need to make this team specific
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl2
-		minetest.log("Forge I added to " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge I added to " .. teams.get_team(player:get_player_name()))
 	end,
 	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
-		minetest.log("Forge I removed from " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge I removed from " .. teams.get_team(player:get_player_name()))
 	end,
 	name = "Forge I"},
 
 	["forge_2"] = {
 	add = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl3
-		minetest.log("Forge II added to " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge II added to " .. teams.get_team(player:get_player_name()))
 	end,
 	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
-		minetest.log("Forge II removed from " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge II removed from " .. teams.get_team(player:get_player_name()))
 	end,
 	name = "Forge II"},
 
 	["forge_3"] = {
 	add = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl4
-		minetest.log("Forge III added to " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge III added to " .. teams.get_team(player:get_player_name()))
 	end,
 	remove = function(player)
 		item_spawner.forges[teams.get_team(player:get_player_name())] = item_spawner.times.forge.lvl1
-		minetest.log("Forge III removed from " .. teams.get_team(player:get_player_name()))
+		item_spawner.update_forge()
+		--minetest.log("Forge III removed from " .. teams.get_team(player:get_player_name()))
 	end,
 	name = "Forge III"},
 }
@@ -226,6 +243,12 @@ shop.remove_upgrades = function(player) -- used when player leaves game or game 
 	end
 end
 
+shop.remove_all_upgrades = function()
+	for pn in pairs(teams.players) do
+		shop.remove_upgrades(minetest.get_player_by_name(pn))
+	end
+end
+
 shop.find_upgrade = function(upgrade)
 	if upgrades[upgrade] then
 		return upgrades[upgrade]
@@ -234,13 +257,33 @@ shop.find_upgrade = function(upgrade)
 	end
 end
 
-teams.register_join_callback("remove_upgrades", function(player, team)
-	shop.remove_upgrades(player)
-end)
+teams.register_join_callback("remove_upgrades", {
+	name = "remove_upgrades",
+	func = function(player, team)
+		shop.remove_upgrades(player)
+	end
+})
 
-teams.register_leave_callback("remove_upgrades", function(player, team)
-	shop.remove_upgrades(player)
-end)
+teams.register_start_callback("remove_upgrades", {
+	name = "remove_upgrades",
+	func = function()
+		shop.remove_all_upgrades()
+	end
+})
+
+teams.register_end_callback("remove_upgrades", {
+	name = "remove_upgrades",
+	func = function(team)
+		shop.remove_all_upgrades()
+	end
+})
+
+teams.register_leave_callback("remove_upgrades", {
+	name = "remove_upgrades",
+	func = function(player, team)
+		shop.remove_upgrades(player)
+	end
+})
 
 shop.register_upgrade_shop = function(def)
 	minetest.register_node("base_shop:" .. tostring(def.shop_name) .. "_upgrades_shop", {
@@ -277,11 +320,7 @@ shop.register_upgrade_shop = function(def)
 								  "tooltip[forge_2;Forge II\nCost: 8 Diamond;grey;lightgreen]" ..
 								  "tooltip[forge_3;Forge III\nCost: 16 Diamond;grey;lightgreen]"
 
-			if name then
-				minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
-			else
-				minetest.chat_send_all("Player " .. name .. " attempted to use shop >> WARNING: variable 'name' is nil in function on_rightclick")
-			end
+			minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
 		end,
 	})
 

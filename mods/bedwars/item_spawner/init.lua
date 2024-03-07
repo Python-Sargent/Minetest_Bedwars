@@ -29,6 +29,26 @@ item_spawner.levels = {
 
 item_spawner.forges = {}
 
+item_spawner.spawning = false
+
+local start_itemspawning = function()
+	item_spawner.spawning = true
+end
+
+teams.register_start_callback("start_itemspawning", {
+    name = "start_itemspawning",
+    func = function(player, team)
+        minetest.after(30, start_itemspawning)
+    end
+})
+
+teams.register_end_callback("stop_itemspawning", {
+    name = "stop_itemspawning",
+    func = function(player, team)
+        item_spawner.spawning = false
+    end
+})
+
 minetest.register_node("item_spawners:mese_spawner", {
 	description = "Mese Spawner",
 	tiles = {"default_mese_block.png"},
@@ -56,6 +76,7 @@ minetest.register_abm({
 	interval = item_spawner.levels.diamond.delay,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
+		if (item_spawner.spawning == false) then return end
 		minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:diamond")
 	end
 })
@@ -66,6 +87,7 @@ minetest.register_abm({
 	interval = item_spawner.levels.mese.delay,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
+		if (item_spawner.spawning == false) then return end
 		minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:mese_crystal")
 	end
 })
@@ -111,16 +133,28 @@ item_spawner.register_forge = function(team)
 		on_timer = function(pos, elapsed)
 			local meta = minetest.get_meta(pos)
 			meta:set_int("ticks", meta:get_int("ticks") + 1)
-			if meta:get_int("ticks") >= item_spawner.forges[team].gold then
-				minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:gold_ingot")
-				meta:set_int("ticks", 0)
+			if (item_spawner.spawning == true) then
+				if meta:get_int("ticks") >= item_spawner.forges[team].gold then
+					minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:gold_ingot")
+					meta:set_int("ticks", 0)
+				end
+				minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:steel_ingot")
 			end
-			minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:steel_ingot")
 			local timer = minetest.get_node_timer(pos)
 			timer:start(item_spawner.forges[team].steel)
 			return false
 		end,
 	})
+end
+
+item_spawner.update_forge = function()
+	local node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, {x=55, y=35, z=137}), {
+		"item_spawners:forge_red", "item_spawners:forge_blue",
+	})
+
+	for i, pos in ipairs(node_positions) do
+		minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
+	end
 end
 
 local dyes = dye.dyes -- obtain list of dyes from the dyes mod

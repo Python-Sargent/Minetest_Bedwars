@@ -2,6 +2,13 @@ teams = {}
 
 teams.teams = {}
 
+teams.lobby = {}
+
+teams.lobby.current = {
+	name = "Lobby1",
+	spawn = vector.new(434, 4, 435)
+}
+
 teams.maps = {}
 
 local modpath = minetest.get_modpath("teams")
@@ -12,6 +19,7 @@ teams.maps.current_map = {
 		["red"] = {name = "red", spawn = {x=27, y=1, z=22}},
 		["blue"] = {name = "blue", spawn = {x=27, y=1, z=116}},
 	},
+	max_players = 2,
 	start = {x = 27, y = 0, z = 69},
 	path = "",
 	init = function()
@@ -85,6 +93,37 @@ teams.get_team = function(pn) -- get the team name of the player using player na
 	return "" --missing player, just return empty string
 end
 
+teams.lent = function(T) -- Lenght of Table or LenT (lent) similar name as the python len() function
+	local count = 0
+	for _ in pairs(T) do count = count + 1 end
+	return count
+end
+	
+local teleport_particlespawner = {
+    amount = 2000,
+    time = 3,
+    vertical = true,
+    texture = "teams_teleport.png",
+    glow = 5,
+    minpos = {x=-0.5, y=-0.5, z=-0.5},
+    maxpos = {x=0.5, y=0, z=0.5},
+    minvel = {x=0, y=2, z=0},
+    maxvel = {x=0, y=3, z=0},
+    minacc = {x=0, y=2, z=0},
+    maxacc = {x=0, y=3, z=0},
+    minexptime = 3,
+    maxexptime = 6,
+    minsize = 2,
+    maxsize = 3,
+}
+
+teams.add_teleport_particlespawner = function(pos)
+	local particlespawner = teleport_particlespawner
+	particlespawner.minpos = vector.offset(pos, particlespawner.minpos.x, particlespawner.minpos.y, particlespawner.minpos.z)
+	particlespawner.maxpos = vector.offset(pos, particlespawner.maxpos.x, particlespawner.maxpos.y, particlespawner.maxpos.z)
+	minetest.add_particlespawner{particlespawner}
+end
+
 local leave_callbacks = {}
 
 teams.register_leave_callback = function(name, callback)
@@ -92,8 +131,8 @@ teams.register_leave_callback = function(name, callback)
 end
 
 local run_leave_callbacks = function(player, team)
-	for i, callback in ipairs(leave_callbacks) do
-		callback(player, team)
+	for callback in pairs(leave_callbacks) do
+		leave_callbacks[callback].func(player, team)
 	end
 end
 
@@ -104,30 +143,61 @@ teams.register_join_callback = function(name, callback)
 end
 
 local run_join_callbacks = function(player, team)
-	for i, callback in ipairs(join_callbacks) do
-		callback(player, team)
+	for callback in pairs(join_callbacks) do
+		join_callbacks[callback].func(player, team)
 	end
 end
 
 local die_callbacks = {}
 
 teams.register_die_callback = function(name, callback)
-	die_callbacks[name] = {name = name, func = callback}
+	die_callbacks[name] = callback
 end
 
 local run_die_callbacks = function(player, team, reason)
-	for i, callback in ipairs(die_callbacks) do
+	for callback in pairs(die_callbacks) do
 		die_callbacks[callback].func(player, team, reason)
 	end
 end
 
+local start_callbacks = {}
+
+teams.register_start_callback = function(name, callback)
+	start_callbacks[name] = callback
+end
+
+local run_start_callbacks = function()
+	for callback in pairs(start_callbacks) do
+		start_callbacks[callback].func()
+	end
+end
+
+local end_callbacks = {}
+
+teams.register_end_callback = function(name, callback)
+	end_callbacks[name] = callback
+end
+
+local run_end_callbacks = function(winning_team)
+	for callback in pairs(end_callbacks) do
+		end_callbacks[callback].func(winning_team)
+	end
+end
+
 teams.spawn = function(player)
-	player:respawn() -- respawn the player
-	player:set_hp(16, "respawn")
-	player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
-	local inv = player:get_inventory()
-	if not inv:contains_item("main", "default:sword_wood 1") then
-		inv:add_item("main", "default:sword_wood 1")
+	if teams.players[player:get_player_name()] and teams.players[player:get_player_name()].is_playing then
+		player:respawn() -- respawn the player
+		player:set_hp(16, "respawn")
+		player:set_pos(teams.maps.current_map.teams[teams.get_team(player:get_player_name())].spawn)
+		local inv = player:get_inventory()
+		if not inv:contains_item("main", "default:sword_wood 1") then
+			inv:add_item("main", "default:sword_wood 1")
+		end
+	else
+		player:respawn() -- respawn the player
+		player:set_hp(16, "respawn")
+		teams.add_teleport_particlespawner(player:get_pos())
+		player:set_pos(teams.lobby.current.spawn)
 	end
 end
 
@@ -170,80 +240,117 @@ teams.game_start = function()
 	for i, pn in ipairs(teams.players) do
 		local pn = teams.players[pn].name
 		teams.on_joinplayer(pn)
+		teams.join_team(pn, teams.get_team(pn)) -- kinda redundant, but whatever
 	end
+	run_start_callbacks()
 	minetest.chat_send_all("Game Started!")
 end
 
 teams.game_end = function(winning_team)
 	minetest.after(5, teams.game_start)
 	minetest.chat_send_all(winning_team .. " won")
-	for i, pn in ipairs(teams.teams[winning_team].players) do
-		minetest.chat_send_player("Your Team Won!")
+	for pn in pairs(teams.teams[winning_team].players) do
+		minetest.chat_send_player(pn, "Your Team Won!")
+	end
+	for pn in pairs(teams.players) do -- move everyone to the lobby
+		minetest.get_player_by_name(pn):set_pos(teams.lobby.current.spawn)
+	end
+end
+
+teams.setup_lobby = function()
+	minetest.clear_objects({mode = "quick"})
+	minetest.place_schematic({x=400, y=0, z=400}, modpath .. "/schematics/lobby.mts", nil, nil, true)
+	for pn in pairs(teams.players) do -- move everyone to the lobby
+		minetest.get_player_by_name(pn):set_pos(teams.lobby.current.spawn)
 	end
 end
 
 teams.respawn = function(player) -- custom respawn function
-	player:get_inventory():set_list("main", {})
-	if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
-		player:respawn() -- respawn the player
-		player:set_hp(16)
-		player:set_pos(teams.maps.current_map.start)
-		--local chud = countdown_HUD(player)
-		--countdown(5, teams.spawn, player, chud)
-		minetest.after(5, teams.spawn, player)
-	else
-		if teams.players[player:get_player_name()] and teams.get_team(player:get_player_name()) then
-			local players = teams.teams[teams.get_team(player:get_player_name())].players
-			if #players < 1 then
-				minetest.chat_send_all(minetest.colorize(teams.get_team(pn), "TEAM ELIMINATED"))
-			end
-			local teams_eliminated = 0
-			local winning_team = ""
-			for i, team in ipairs(teams.maps.current_map.teams) do
-				if teams.teams[team].has_bed ~= true then
-					teams_eliminated = teams_eliminated + 1
-				else
-					winning_team = team
+	if teams.players[player:get_player_name()].is_playing then
+		player:get_inventory():set_list("main", {})
+		if teams.teams[teams.get_team(player:get_player_name())].has_bed == true then -- bed hasn't been destroyed
+			player:respawn() -- respawn the player
+			player:set_hp(20)
+			player:set_pos(teams.maps.current_map.start)
+			--local chud = countdown_HUD(player)
+			--countdown(5, teams.spawn, player, chud)
+			minetest.after(5, teams.spawn, player)
+		else
+			if teams.players[player:get_player_name()] and teams.get_team(player:get_player_name()) then
+				local players = teams.teams[teams.get_team(player:get_player_name())].players
+				if teams.lent(players) < 1 then
+					minetest.chat_send_all(minetest.colorize(teams.get_team(pn), "TEAM ELIMINATED"))
+				end
+				teams.on_leaveplayer(player:get_player_name())
+				local teams_eliminated = 0
+				local winning_team = ""
+				for i, team in ipairs(teams.maps.current_map.teams) do
+					if teams.teams[team].has_bed ~= true then
+						teams_eliminated = teams_eliminated + 1
+					else
+						winning_team = team
+					end
+				end
+				if teams_eliminated >= teams.lent(teams.maps.current_map.teams) then
+					teams.game_end(winning_team)
 				end
 			end
-			if teams_eliminated >= #teams.maps.current_map.teams then
-				teams.game_end(winning_team)
+			player:respawn() -- respawn the player
+			player:set_hp(16)
+			player:set_pos(teams.lobby.current.spawn)
+			if teams.teams[teams.get_team(player:get_player_name())] then
+				teams.teams[teams.get_team(player:get_player_name())].players[player:get_player_name()] = nil -- remove player from team
 			end
 		end
+	else
 		player:respawn() -- respawn the player
-		player:set_hp(16)
-		player:set_pos(teams.maps.current_map.start)
-		teams.teams[teams.get_team(player:get_player_name())].players[player:get_player_name()] = nil -- remove player from team
+		player:set_hp(20)
+		player:set_pos(teams.lobby.current.spawn)
 	end
 end
 
 teams.on_dieplayer = function(pn, reason) -- a player died, update score and respawn
 	local deathinfo = "died"
-	if reason and reason.type == "punch" and reason.object and reason.object:is_player() then
+	if reason and reason.type == "punch" and reason.object and reason.object:is_player() and teams.players[pn].is_playing then
 		deathinfo = "was killed by " .. minetest.colorize(teams.get_team(reason.object:get_player_name()), reason.object:get_player_name())
 		teams.players[reason.object:get_player_name()].kills = teams.players[reason.object:get_player_name()].kills + 1
 		teams.teams[teams.get_team(reason.object:get_player_name())].kills = teams.teams[teams.get_team(reason.object:get_player_name())].kills + 1
 	end
-	run_die_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn), deathinfo)
 	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. minetest.colorize("pink", " " .. deathinfo))
-	teams.players[pn].deaths = teams.players[pn].deaths + 1 -- increment player deaths
-	teams.teams[teams.get_team(pn)].deaths = teams.teams[teams.get_team(pn)].deaths + 1 -- increment total team deaths
+	if teams.players[pn] and teams.players[pn].is_playing then
+		teams.players[pn].deaths = teams.players[pn].deaths + 1 -- increment player deaths
+		teams.teams[teams.get_team(pn)].deaths = teams.teams[teams.get_team(pn)].deaths + 1 -- increment total team deaths
+	end
+	run_die_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn), deathinfo)
 	teams.respawn(minetest.get_player_by_name(pn))
 end
 
 teams.join_team = function(pn, team) -- use to make o player join a team
-	if teams.players[pn] and teams.get_team(pn) then -- make sure we're not removing nonexistent player
+	minetest.get_player_by_name(pn):get_inventory():set_list("main", {})
+	if teams.players[pn] and teams.get_team(pn) ~= "" and teams.get_team(pn) ~= nil then -- make sure we're not removing nonexistent player
 		teams.teams[teams.get_team(pn)].players[pn] = nil -- remove player from old team
 	end
 	teams.teams[team].players[pn] = pn -- add player to new team
-	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0}
+	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0, is_playing = true}
 	local player = minetest.get_player_by_name(pn)
-	run_join_callbacks(player, team)
+	teams.add_teleport_particlespawner(player:get_pos())
 	player:set_pos(teams.maps.current_map.teams[team].spawn)
+	run_join_callbacks(player, team)
+	local playercount = 0
+	for tn in pairs(teams.teams) do
+		for pn in pairs(teams.teams[tn].players) do
+			playercount = playercount + 1
+		end
+	end
+	if playercount >= teams.maps.current_map.max_players then
+		minetest.chat_send_all("Starting Game in 5 seconds")
+		minetest.after(5, teams.game_start)
+	end
 	minetest.chat_send_player(pn, "Joined team " .. minetest.colorize(teams.get_team(pn), teams.get_team(pn)))
 end
 
 teams.on_joinplayer = function(pn) -- when joining a match
+	minetest.get_player_by_name(pn):get_inventory():set_list("main", {})
 	minetest.get_player_by_name(pn):set_properties({nametag_color = {a=0, r=255, g=255, b=255}})
 	minetest.get_player_by_name(pn):set_hp(16)
 	--default.chest.enderchest.create_inventory(pn)
@@ -266,13 +373,26 @@ teams.on_joinplayer = function(pn) -- when joining a match
 end
 
 teams.leave_team = function(pn) -- leave the team you are on
-	teams.teams[teams.get_team(pn)].players[pn] = nil
-	run_leave_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn))
-	teams.players[pn] = nil
+	if pn ~= nil then
+		run_leave_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn)) -- ran before player data is deleted
+		if teams.teams[teams.get_team()] then teams.teams[teams.get_team(pn)].players[pn] = nil end -- remove player from team
+		teams.players[pn] = {team = "", name = pn, kills = 0, deaths = 0, beds = 0, is_playing = false} -- reset player
+	end
 end
 
 teams.on_leaveplayer = function(pn) -- when left a match
 	teams.leave_team(pn)
+end
+
+teams.on_join_server = function(player, last_login)
+	teams.add_teleport_particlespawner(player:get_pos())
+	player:set_pos(teams.lobby.current.spawn)
+	teams.players[player:get_player_name()] = {team = "", name = player:get_player_name(), kills = 0, deaths = 0, beds = 0, is_playing = false}
+end
+
+teams.on_leave_server = function(player, timed_out)
+	teams.on_leaveplayer(player:get_player_name())
+	teams.players[player:get_player_name()] = nil
 end
 
 teams.on_cheat = function(pn, cheat) -- someone triggered the minetest anticheat, kick them and warn the other players
@@ -290,20 +410,61 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 	end
 end
 
+local knockback_ratings = {
+	[1] = 4,
+	[2] = 5,
+	[3] = 6,
+	[4] = 7,
+	[5] = 8,
+}
+
+local calculate_knockback = minetest.calculate_knockback
+function minetest.calculate_knockback(player, hitter, time_from_last_punch, tool_capabilities, dir, distance, damage)
+	if damage == 0 or player:get_armor_groups().immortal then
+		return 0.0
+	end
+
+	local m = 8
+	-- solve m - m*e^(k*4) = 4 for k
+	local k = -0.17328
+	local res = m - m * math.exp(k)
+
+	if distance < 3.0 then
+		res = res * 1.01 -- more knockback when closer
+	elseif distance > 4.0 then
+		res = res * 0.99 -- less when far away
+	end
+	local knockback_group = tool_capabilities.damage_groups.knockback or 1
+	--minetest.log("Knockback group: " .. knockback_group .. ", from group num: " .. tostring(tool_capabilities.damage_groups.knockback))
+	player:add_velocity(vector.new(0, 5, 0)) -- to stop players from disabling knockback by crouching at the edge (trust me it's not smth you want)
+	return res * knockback_ratings[tool_capabilities.damage_groups.knockback]
+end
+
 minetest.register_on_dieplayer(function(player, reason) -- trigger teams.on_dieplayer()
 	teams.on_dieplayer(player:get_player_name(), reason)
 end)
 
 minetest.register_on_joinplayer(function(player, last_login) -- trigger teams.on_joinplayer()
-	teams.on_joinplayer(player:get_player_name())
+	--teams.on_joinplayer(player:get_player_name())
+	player:set_physics_override({
+		sneak_glitch = true,
+	})
+	teams.on_join_server(player, last_login)
 end)
 
 minetest.register_on_leaveplayer(function(player, timed_out) -- trigger teams.on_leaveplayer()
-	teams.on_leaveplayer(player:get_player_name())
+	--teams.on_leaveplayer(player:get_player_name())
+	teams.on_leave_server(player, timed_out)
 end)
 
 minetest.register_on_cheat(function(player, cheat) -- trigger teams.on_cheat()
 	teams.on_cheat(player:get_player_name(), cheat)
+end)
+
+minetest.register_on_chat_message(function(name, message)
+	local color = teams.get_team(name) or "white"
+    minetest.chat_send_all(minetest.colorize(color, "<" .. name .. "> ") .. message)
+    return true
 end)
 
 local list = function(name)
@@ -392,6 +553,7 @@ minetest.register_chatcommand("teams", { -- chatcommand to control teams (must b
 				elseif cmd2 == "player" then
 					local pn = parts[3]
 					if pn then
+						minetest.get_player_by_name(pn):get_inventory():set_list("main", {})
 						teams.join_team(pn, teams.get_team(pn))
 						return true, "Player" .. minetest.colorize(teams.get_team(pn), pn) .. " was reset"
 					else
@@ -414,16 +576,18 @@ minetest.register_chatcommand("teams", { -- chatcommand to control teams (must b
 
 minetest.register_chatcommand("t", { -- chatcommand for team chat
     privs = {
-        interact = true,
 		shout = true,
     },
 	description = "Chat to team only.\nUsage: /t <message>",
     func = function(name, param)
 		local parts = param:split(" ")
 		local msg = parts[1]
-		for i, player in ipairs(teams.teams[teams.get_team(name)].players) do
-			local pn = teams.players[player].name
-			minetest.chat_send_player(pn, "<" .. pn  .. "> " .. msg)
+		if teams.players[name].is_playing then
+			for pn in pairs(teams.teams[teams.get_team(name)].players) do
+				minetest.chat_send_player(pn, minetest.colorize(teams.get_team(pn), "*" .. pn  .. "* " .. msg))
+			end
+		else
+			return false, "You may not chat to your team while dead or not playing."
 		end
 	end,
 })
@@ -437,6 +601,50 @@ minetest.register_chatcommand("start", { -- chatcommand for starting/restarting 
 		teams.game_start()
 	end,
 })
+
+minetest.register_chatcommand("setup", { -- chatcommand for setting up a new world
+    privs = {
+		server = true,
+    },
+	description = "Setup the lobby in the world.\nUsage: /setup",
+    func = function(name, param)
+		teams.setup_lobby()
+	end,
+})
+
+minetest.register_chatcommand("lobby", { -- chatcommand for starting/restarting the game
+    privs = {
+		interact = true,
+    },
+	description = "Start game.\nUsage: /lobby",
+    func = function(name, param)
+		minetest.get_player_by_name(name):get_inventory():set_list("main", {})
+		teams.on_leaveplayer(name)
+		teams.on_join_server(minetest.get_player_by_name(name))
+	end,
+})
+
+minetest.register_node("teams:join_game", {
+	description = "Join Game",
+	paramtype = "light",
+	paramtype2 = "4dir",
+	tiles = {
+		"teams_join_game.png"
+	},
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
+	},
+	groups = {map_node=1, join_node=1},
+	on_punch = function(pos, node, puncher, pointed_thing)
+		puncher:get_inventory():set_list("main", {})
+		teams.on_joinplayer(puncher:get_player_name())
+	end,
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
+})
+
 --[[
 minetest.register_chatcommand("tstat", { -- show stats for your team
     description = "Show your team's stats",
