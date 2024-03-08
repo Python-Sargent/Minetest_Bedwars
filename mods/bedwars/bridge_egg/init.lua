@@ -40,7 +40,7 @@ local thrown_bridge_egg = {
   player_name = ""
 }
 
-local function drawline(pos1, pos2, pn)
+--[[local function drawline(pos1, pos2, pn)
   local x = pos1.x - pos2.x
   local y = pos1.y - pos2.y
   local z = pos1.z - pos2.z
@@ -51,7 +51,7 @@ local function drawline(pos1, pos2, pn)
     local pos = vector.new(i, y2, z2)
     minetest.set_node(pos, {name = "wool:" .. teams.get_team(pn)})
   end
-end
+end]]--
 
 function thrown_bridge_egg:on_step(dtime, moveresult)
   local collided_with_node = moveresult.collisions[1] and moveresult.collisions[1].type == "node"
@@ -61,6 +61,8 @@ function thrown_bridge_egg:on_step(dtime, moveresult)
     local pos2 = moveresult.collisions[1].node_pos
 
     minetest.log("Bridge Egg positions. Pos1: (" .. math.round(pos1.x, 2) .. ", " .. math.round(pos1.y, 2) .. ", " .. math.round(pos1.z, 2) .. "), Pos2: (" .. math.round(pos2.x, 2) .. ", " .. math.round(pos2.y, 2) .. ", " .. math.round(pos2.z, 2) .. ")")
+
+    local vect = vector.normalize(vector.direction(pos1, pos2))
     
     --drawline(pos1, pos2, self.player_name)
 

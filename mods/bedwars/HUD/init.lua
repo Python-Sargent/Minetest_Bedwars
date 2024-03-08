@@ -31,6 +31,9 @@ HUD.remove_HUD = function(player)
     player:hud_remove(hudp.teamhud)
     player:hud_remove(hudp.killhud)
     player:hud_remove(hudp.deathhud)
+    for i, whud in ipairs(hudp.whuds) do
+        player:hud_remove(whud)
+    end
     HUD.players[hudp.name] = nil
 end
 
@@ -46,34 +49,59 @@ HUD.init_HUD = function(player)
         scale     = { x = 1, y = 1},
         alignment = { x = -1, y = 0 },
     })
-    local thud = player:hud_add({ -- thud, short for Team HUD :)
+    local thud = player:hud_add({ -- thud, short for Team HUD
         hud_elem_type = "text",
         position      = {x = 1, y = 0.025}, -- pos normalized (-1 to 1)
-        offset        = {x = -64,   y = 0}, -- ofset (px)
+        offset        = {x = -64,   y = 0}, -- offset (px)
         text          = HUD.create_text("team", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
     })
-    local khud = player:hud_add({ -- khud, short for Kill HUD :)
+    local khud = player:hud_add({ -- khud, short for Kill HUD
         hud_elem_type = "text",
         position      = {x = 1, y = 0.05}, -- pos normalized (-1 to 1)
-        offset        = {x = -64,   y = 0}, -- ofset (px)
+        offset        = {x = -64,   y = 0}, -- offset (px)
         text          = HUD.create_text("kills", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
     })
-    local dhud = player:hud_add({ -- dhud, short for Death HUD :)
+    local dhud = player:hud_add({ -- dhud, short for Death HUD
         hud_elem_type = "text",
         position      = {x = 1, y = 0.075}, -- pos normalized (-1 to 1)
-        offset        = {x = -64,   y = 0}, -- ofset (px)
+        offset        = {x = -64,   y = 0}, -- offset (px)
         text          = HUD.create_text("deaths", player),
         alignment     = {x = -1, y = 0}, -- alignment normalized (-1 to 1)
         scale         = {x = 100, y = 100}, -- scale (px)
         number        = HUD.colors[teams.get_team(player:get_player_name())], -- color (hex) using table to convert colortext to hex
     })
-    HUD.players[player:get_player_name()] = {background = bg, teamhud = thud, killhud = khud, deathhud = dhud, name = player:get_player_name()}
+    local waypoint_huds = {}
+    local mese_node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {"item_spawners:mese_spawner"})
+    local diamond_node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {"item_spawners:diamond_spawner"})
+
+    for i, pos in ipairs(mese_node_positions) do
+        waypoint_huds[i] = player:hud_add({
+            hud_elem_type = "waypoint",
+            name = "item_spawners:mese_spawner_"..i,
+            text          = "Mese Spawner",
+            precision = 0,
+            number = 0xEEEE11,
+            world_pos = vector.offset(pos, 0, 2, 0),
+        })
+    end
+
+    for i, pos in ipairs(diamond_node_positions) do
+        waypoint_huds[i] = player:hud_add({
+            hud_elem_type = "waypoint",
+            name = "item_spawners:diamond_spawner_"..i,
+            text          = "Diamond Spawner",
+            precision = 0,
+            number = 0xEEEE11,
+            world_pos = vector.offset(pos, 0, 2, 0),
+        })
+    end
+    HUD.players[player:get_player_name()] = {background = bg, teamhud = thud, killhud = khud, deathhud = dhud, whuds = waypoint_huds, name = player:get_player_name()}
 end
 
 HUD.update_HUD = function(player)
@@ -136,7 +164,7 @@ minetest.register_chatcommand("hud", {
         local player = minetest.get_player_by_name(name)
 
 		if cmd == "show" then
-			on_joinplayer(player)
+			HUD.init_HUD(player)
         elseif cmd == "hide" then
             HUD.remove_HUD(player)
         elseif cmd == "update" then

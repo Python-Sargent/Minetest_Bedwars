@@ -576,3 +576,13 @@ minetest.register_node("default:cloud", {
 	on_blast = function() end,
 	can_dig = default.can_dig_map,
 })
+
+minetest.register_node("default:barrier", {
+	description = S("Barrier (WIP don't use yet)"),
+	drawtype = "airlike",
+	pointable = false,
+	sounds = default.node_sound_defaults(),
+	groups = {map_node=1},
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
+})

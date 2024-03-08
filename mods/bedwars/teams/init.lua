@@ -22,10 +22,11 @@ teams.maps.current_map = {
 	max_players = 2,
 	start = {x = 27, y = 0, z = 69},
 	path = "",
+	size = {x=55, y=35, z=137},
 	init = function()
 		minetest.clear_objects({mode = "quick"})
 		minetest.place_schematic({x=0, y=-10, z=0}, modpath .. "/schematics/Galactium_Map.mts", nil, nil, true)
-		local node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, {x=55, y=35, z=137}), {
+		local node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {
 			"item_spawners:forge_red", "item_spawners:forge_blue",
 		})
 
@@ -446,6 +447,7 @@ end)
 
 minetest.register_on_joinplayer(function(player, last_login) -- trigger teams.on_joinplayer()
 	--teams.on_joinplayer(player:get_player_name())
+	player:get_inventory():set_list("main", {})
 	player:set_physics_override({
 		sneak_glitch = true,
 	})
@@ -621,6 +623,25 @@ minetest.register_chatcommand("lobby", { -- chatcommand for starting/restarting 
 		minetest.get_player_by_name(name):get_inventory():set_list("main", {})
 		teams.on_leaveplayer(name)
 		teams.on_join_server(minetest.get_player_by_name(name))
+	end,
+})
+
+teams.rules = "1: No unhelpful or offensive names or messages.\n2: No cheating in Public games, if you want to test something get into a Private game with a friend.\n3: Explore, Don't destroy.\n4: No stalking, bullying, or harrasment.\n5: Don't beg for roles, privs, or items.\n6: Keep your personal information safe.\n7: If you see anyone breaking these rules report them.\n8: If you don't understand or agree to these rules contact and Admin or Moderator.\n9: No Cross-Teaming or Stream-Sniping.\n10: Admins and Moderators have the ability to punish people who break these rules at any time and anywhere, this includes PermaBanning."
+
+minetest.register_chatcommand("rules", {
+    privs = {},
+	description = "View the server rules.\nUsage: /rules",
+    func = function(name, param)
+		minetest.chat_send_player(name, minetest.colorize("lightgreen", "Rules:\n" .. teams.rules))
+	end,
+})
+
+minetest.register_chatcommand("agree", { -- agree to the rules
+    privs = {},
+	description = "Usage: /agree",
+    func = function(name, param)
+		minetest.chat_send_player(name, minetest.colorize("green", "Rules:\n" .. teams.rules))
+		minetest.change_player_privs(name, {interact = true, shout = true})
 	end,
 })
 

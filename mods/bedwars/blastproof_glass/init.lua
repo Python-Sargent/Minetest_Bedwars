@@ -15,7 +15,7 @@ for i = 1, #dyes do
 		drawtype = "glasslike_framed_optional",
 		paramtype = "light",
 		tiles = {"blastproof_glass.png^[colorize:" .. name .. ":185"},
-		use_texture_alpha = "clip",
+		use_texture_alpha = "blend",
 		is_ground_content = false,
 		sunlight_propogates = true,
 		groups = {cracky = 1, glass = 1, [color_group] = 1, oddly_breakable_by_hand = 2, not_in_creative_inventory = 1},
