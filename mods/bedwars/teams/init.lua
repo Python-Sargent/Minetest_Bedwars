@@ -369,7 +369,7 @@ teams.on_joinplayer = function(pn) -- when joining a match
 	end
 	if has_joined == false then
 		minetest.chat_send_player(pn, minetest.colorize("red", "No empty team found"))
-		teams.join_team(pn, "red") -- make it so you're in a team
+		teams.on_leaveplayer(pn)
 	end
 end
 

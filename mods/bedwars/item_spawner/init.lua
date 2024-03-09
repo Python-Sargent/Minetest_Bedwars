@@ -29,16 +29,18 @@ item_spawner.levels = {
 
 item_spawner.forges = {}
 
+item_spawner.mese_spawning = false
 item_spawner.spawning = false
 
-local start_itemspawning = function()
-	item_spawner.spawning = true
+local start_mese_spawning = function()
+	item_spawner.mese_spawning = true
 end
 
 teams.register_start_callback("start_itemspawning", {
     name = "start_itemspawning",
     func = function(player, team)
-        minetest.after(30, start_itemspawning)
+		item_spawner.spawning = true
+        minetest.after(60, start_mese_spawning)
     end
 })
 
@@ -46,6 +48,7 @@ teams.register_end_callback("stop_itemspawning", {
     name = "stop_itemspawning",
     func = function(player, team)
         item_spawner.spawning = false
+		item_spawner.mese_spawning = false
     end
 })
 
@@ -57,7 +60,7 @@ minetest.register_node("item_spawners:mese_spawner", {
 	sounds = default.node_sound_stone_defaults(),
 	light_source = 3,
 	on_blast = function() end,
-	can_dig = can_dig_map,
+	can_dig = default.can_dig_map,
 })
 
 minetest.register_node("item_spawners:diamond_spawner", {
@@ -87,7 +90,7 @@ minetest.register_abm({
 	interval = item_spawner.levels.mese.delay,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
-		if (item_spawner.spawning == false) then return end
+		if (item_spawner.spawning == false and item_spawner.mese_spawning) then return end
 		minetest.add_item({x = pos.x, y = pos.y + 1, z = pos.z}, "default:mese_crystal")
 	end
 })
