@@ -341,6 +341,7 @@ end
 teams.game_start = function()
 	teams.init()
 	teams.maps.current_map.init()
+	teams.game.is_running = true
 	for i, pn in ipairs(teams.players) do
 		local pn = teams.players[pn].name
 		teams.on_joinplayer(pn)
@@ -353,6 +354,7 @@ end
 teams.game_end = function(winning_team)
 	minetest.after(5, teams.game_start)
 	minetest.chat_send_all(winning_team .. " won")
+	teams.game.is_running = false
 	for pn in pairs(teams.teams[winning_team].players) do
 		minetest.chat_send_player(pn, "Your Team Won!")
 	end
@@ -777,6 +779,10 @@ minetest.register_node("teams:join_game", {
 		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
 	},
 	groups = {map_node=1, join_node=1},
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", "Join Game")
+	end,
 	on_punch = function(pos, node, puncher, pointed_thing)
 		puncher:get_inventory():set_list("main", {})
 		teams.on_joinplayer(puncher:get_player_name())
@@ -798,6 +804,10 @@ minetest.register_node("teams:queue", {
 		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
 	},
 	groups = {map_node=1, join_node=1},
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", "Go to Queue")
+	end,
 	on_punch = function(pos, node, puncher, pointed_thing)
 		puncher:get_inventory():set_list("main", {})
 		teams.queueplayer(puncher)
@@ -826,6 +836,10 @@ minetest.register_node("teams:select_map", {
 		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
 	},
 	groups = {map_node=1, join_node=1},
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", "Select Map")
+	end,
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		minetest.show_formspec(clicker:get_player_name(), "teams:select_map", select_map_formspec)
 	end,

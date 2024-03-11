@@ -76,8 +76,9 @@ shop.register_shop = function(def)
 								 "item_image_button[1,2;1,1;turret:turret;turret;1]" ..
 								 "item_image_button[2,2;1,1;fireball:fireball;fireball;1]" ..
 								 "item_image_button[3,2;1,1;enderpearl:ender_pearl;enderpearl;1]" ..
-								 "item_image_button[4,2;1,1;potions:jump_boost_potion;jump_boost;1]" ..
-								 "item_image_button[5,2;1,1;potions:speed_potion;speed;1]"
+								 "item_image_button[4,2;1,1;golden_apple:golden_apple;golden_apple;1]" ..
+								 "item_image_button[5,2;1,1;potions:jump_boost_potion;jump_boost;1]" ..
+								 "item_image_button[6,2;1,1;potions:speed_potion;speed;1]"
 			local formspec_mid2 = "tooltip[stone_sword;Stone Sword\nCost: 10 Steel;grey;white]" ..
 								  "tooltip[steel_sword;Steel Sword\nCost: 7 Gold;grey;gold]" ..
 								  "tooltip[diamond_sword;Diamond Sword\nCost: 4 Mese;grey;lightgreen]" ..
@@ -95,6 +96,7 @@ shop.register_shop = function(def)
 								  "tooltip[turret;Defensive Turret\nCost: 120 Steel;grey;white]" ..
 								  "tooltip[fireball;Fireball\nCost: 40 Steel;grey;white]" ..
 								  "tooltip[enderpearl;Enderpearl\nCost: 4 Mese;grey;lightgreen]" ..
+								  "tooltip[golden_apple;Golden Apple\nCost: 3 Gold Ingot;grey;gold]" ..
 								  "tooltip[jump_boost;Jump Boost Potion\nCost: 1 Mese;grey;lightgreen]" ..
 								  "tooltip[speed;Speed Potion\nCost: 1 Mese;grey;lightgreen]"
 
@@ -146,7 +148,7 @@ shop.register_shop = function(def)
 			shop.buy_item(inv, player, "default:mese_crystal 4", "default:obsidian 4", nil, "4 Mese Crystal")
 		end
 		if fields.blastproof_glass then
-			shop.buy_item(inv, player, "default:steel_ingot", "blastproof_glass:" .. teams.get_team(player:get_player_name()) .." 4", nil, "4 Steel Ingot")
+			shop.buy_item(inv, player, "default:steel_ingot 4", "blastproof_glass:" .. teams.get_team(player:get_player_name()) .." 4", nil, "4 Steel Ingot")
 		end
 		if fields.tnt then
 			shop.buy_item(inv, player, "default:gold_ingot 4", "tnt:tnt", nil, "4 Gold Ingot")
@@ -159,6 +161,9 @@ shop.register_shop = function(def)
 		end
 		if fields.enderpearl then
 			shop.buy_item(inv, player, "default:mese_crystal 4", "enderpearl:ender_pearl", nil, "4 Mese Crystal")
+		end
+		if fields.golden_apple then
+			shop.buy_item(inv, player, "default:gold_ingot 3", "golden_apple:golden_apple", nil, "3 Golden Ingot")
 		end
 		if fields.jump_boost then
 			shop.buy_item(inv, player, "default:mese_crystal 1", "potions:jump_boost_potion", nil, "1 Mese Crystal")

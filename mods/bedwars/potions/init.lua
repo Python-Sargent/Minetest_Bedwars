@@ -91,10 +91,12 @@ local function indexOf(table, name)
 end
 
 potions.add_effect = function(player, effect, time, strength)
-    potions.players[player:get_player_name()].effects[effect] = potions.effects[effect]
-    potions.players[player:get_player_name()].effects[effect].time = time
-    potions.players[player:get_player_name()].effects[effect].on_apply(player, strength)
-    potions.update_hud(player)
+    if potions.effects[effect] and potions.players[player:get_player_name()] then
+        potions.players[player:get_player_name()].effects[effect] = potions.effects[effect]
+        potions.players[player:get_player_name()].effects[effect].time = time
+        potions.players[player:get_player_name()].effects[effect].on_apply(player, strength)
+        potions.update_hud(player)
+    end
 end
 
 potions.do_effects = function(dtime)
@@ -149,6 +151,30 @@ potions.register_effect({
     time = 0
 })
 
+potions.register_effect({
+    name = "invisibility",
+    on_apply = function(player, strength)
+
+    end,
+    on_end = function(player)
+        minetest.chat_send_player(player:get_player_name(), "Your invisibility effect ran out.")
+    end,
+    on_step = function(player, dtime) potions.update_hud(player) end,
+    time = 0
+})
+
+potions.register_effect({
+    name = "absorption",
+    on_apply = function(player, strength)
+
+    end,
+    on_end = function(player)
+        minetest.chat_send_player(player:get_player_name(), "Your absorption effect ran out.")
+    end,
+    on_step = function(player, dtime) potions.update_hud(player) end,
+    time = 0
+})
+
 potions.register_potion = function(name, def)
     minetest.register_craftitem("potions:" .. name .. "_potion", {
         description = def.description .. " Potion",
@@ -165,11 +191,17 @@ end
 potions.register_potion("jump_boost", {
     description = "Jump Boost",
     strength = 2,
-    time = 30,
+    time = 45,
 })
 
 potions.register_potion("speed", {
     description = "Speed",
+    strength = 2,
+    time = 45,
+})
+
+potions.register_potion("invisibility", {
+    description = "Invisibility",
     strength = 2,
     time = 30,
 })

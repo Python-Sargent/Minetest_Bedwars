@@ -13,7 +13,7 @@ minetest.register_node("turret:turret", {
     drawtype = "nodebox",
     node_box = {
         type = "fixed",
-        fixed = {-0.25, -0.5, -0.4, 0.25, 0.5, 0.5}
+        fixed = {-0.25, -0.5, -0.375, 0.25, 0.5, 0.375}
     },
     after_place_node = function(pos, placer, itemstack, pointed_thing) 
         local meta = minetest.get_meta(pos)
