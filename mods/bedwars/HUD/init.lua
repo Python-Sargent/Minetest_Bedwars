@@ -78,7 +78,7 @@ HUD.init_HUD = function(player)
     })
 
     local waypoint_huds = {}
-    local mese_node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {"item_spawners:mese_spawner"})
+    --[[local mese_node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {"item_spawners:mese_spawner"})
     local diamond_node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {"item_spawners:diamond_spawner"})
 
     for i, pos in ipairs(mese_node_positions) do
@@ -99,7 +99,7 @@ HUD.init_HUD = function(player)
             number = 0x0088FF,
             world_pos = vector.offset(pos, 0, 3, 0),
         })
-    end
+    end]]--
     HUD.players[player:get_player_name()] = {background = bg, teamhud = thud, killhud = khud, deathhud = dhud, whuds = waypoint_huds, name = player:get_player_name()}
 end
 

@@ -12,7 +12,7 @@ for i = 1, #dyes do
 
 	minetest.register_node("blastproof_glass:" .. name, {
 		description = S(desc .. " Blastproof Glass"),
-		drawtype = "glasslike_framed_optional",
+		drawtype = "glasslike",
 		paramtype = "light",
 		tiles = {"blastproof_glass.png^[colorize:" .. name .. ":185"},
 		use_texture_alpha = "blend",

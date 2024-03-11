@@ -9,6 +9,14 @@ teams.lobby.current = {
 	spawn = vector.new(434, 4, 435)
 }
 
+teams.lobby.queuing_room = {}
+teams.lobby.queuing_room.current = {
+	name = "Skeletol",
+	spawn = vector.new(10, 504 ,10),
+	path = "/schematics/QueuingRoom.mts",
+	author = "SuperStarSonic",
+}
+
 teams.maps = {}
 
 local modpath = minetest.get_modpath("teams")
@@ -25,7 +33,31 @@ teams.maps.current_map = {
 	size = {x=55, y=35, z=137},
 	init = function()
 		minetest.clear_objects({mode = "quick"})
-		minetest.place_schematic({x=0, y=-10, z=0}, modpath .. "/schematics/Galactium_Map.mts", nil, nil, true)
+		local place = {x=0, y=-10, z=0}
+		minetest.place_schematic(place, modpath .. "/schematics/Galactium2p_Map.mts", nil, nil, true)
+		local node_positions, node_names = minetest.find_nodes_in_area(place, vector.add(place, teams.maps.current_map.size), {
+			"item_spawners:forge_red", "item_spawners:forge_blue",
+		})
+
+		for i, pos in ipairs(node_positions) do
+			minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
+		end
+	end,
+	author = "SuperStarSonic",
+}
+
+teams.maps["Galactium"] = {
+	name = "Galactuim 2 Player",
+	teams = {
+		["red"] = {name = "red", spawn = {x=27, y=1, z=22}},
+		["blue"] = {name = "blue", spawn = {x=27, y=1, z=116}},
+	},
+	max_players = 2,
+	start = {x = 27, y = 0, z = 69},
+	size = {x=121, y=12, z=183},
+	init = function()
+		minetest.clear_objects({mode = "quick"})
+		minetest.place_schematic({x=0, y=-10, z=0}, modpath .. "/schematics/Galactium2p_Map.mts", nil, nil, true)
 		local node_positions, node_names = minetest.find_nodes_in_area({x=0,y=0,z=0}, vector.add({x=0,y=0,z=0}, teams.maps.current_map.size), {
 			"item_spawners:forge_red", "item_spawners:forge_blue",
 		})
@@ -34,9 +66,58 @@ teams.maps.current_map = {
 			minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
 		end
 	end,
+	author = "SuperStarSonic",
 }
 
-teams.maps.maplist = {}
+teams.maps["Asterisk2p"] = {
+	name = "Asterisk 2 Player",
+	teams = {
+		["red"] = {name = "red", spawn = {x=-340, y=-3, z=177}},
+		["blue"] = {name = "blue", spawn = {x=-340, y=-3, z=5}},
+	},
+	max_players = 2,
+	start = {x = -340, y = -7, z = 93},
+	size = {x=55, y=35, z=137},
+	init = function()
+		minetest.clear_objects({mode = "quick"})
+		local place = {x=-400, y=-10, z=0}
+		minetest.place_schematic(place, modpath .. "/schematics/Asterisk2p_Map.mts", nil, nil, true)
+		local node_positions, node_names = minetest.find_nodes_in_area(place, vector.add(place, teams.maps.current_map.size), {
+			"item_spawners:forge_red", "item_spawners:forge_blue",
+		})
+
+		for i, pos in ipairs(node_positions) do
+			minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
+		end
+	end,
+	author = "SuperStarSonic",
+}
+
+teams.maps["CloverLeaf2p"] = {
+	name = "Clover Leaf 2 Player",
+	teams = {
+		["red"] = {name = "red", spawn = {x=-566, y=3, z=20}},
+		["blue"] = {name = "blue", spawn = {x=-780, y=3, z=20}},
+	},
+	max_players = 2,
+	start = {x = -673, y = 0, z = 20},
+	size = {x=254, y=42, z=42},
+	init = function()
+		minetest.clear_objects({mode = "quick"})
+		local place = {x=-800, y=-10, z=0}
+		minetest.place_schematic(place, modpath .. "/schematics/CloverLeaf2p_Map.mts", nil, nil, true)
+		local node_positions, node_names = minetest.find_nodes_in_area(place, vector.add(place, teams.maps.current_map.size), {
+			"item_spawners:forge_red", "item_spawners:forge_blue",
+		})
+
+		for i, pos in ipairs(node_positions) do
+			minetest.registered_nodes["item_spawners:forge_red"].on_construct(pos)
+		end
+	end,
+	author = "Wilderness7272",
+}
+
+--[[teams.maps.maplist = {}
 
 teams.register_map = function(name, teams)
 	teams.maps.maplist[name] = {
@@ -47,7 +128,7 @@ end
 
 teams.unregister_map = function(name)
 	teams.maps.maplist[name] = nil
-end
+end]]
 
 teams.players = {
 	--[[
@@ -59,6 +140,11 @@ teams.players = {
 			beds = 0, -- how many beds has this player destroyed
 		},
 	]]--
+}
+
+teams.game = {
+	is_running = false,
+	waiting_players = 0,
 }
 
 teams.init = function()
@@ -87,6 +173,14 @@ teams.init_team = function(tn)
 	}
 end
 
+teams.chat_send_all = function(message)
+	for pn in pairs(teams.players) do
+		if teams.players[pn].is_playing == true or teams.players[pn].waiting == true then
+			minetest.chat_send_player(pn, message)
+		end
+	end
+end
+
 teams.init()
 
 teams.get_team = function(pn) -- get the team name of the player using player name
@@ -94,7 +188,7 @@ teams.get_team = function(pn) -- get the team name of the player using player na
 	return "" --missing player, just return empty string
 end
 
-teams.lent = function(T) -- Lenght of Table or LenT (lent) similar name as the python len() function
+teams.lent = function(T) -- Length of Table or LenT (lent) similar name as the python len() function
 	local count = 0
 	for _ in pairs(T) do count = count + 1 end
 	return count
@@ -123,6 +217,15 @@ teams.add_teleport_particlespawner = function(pos)
 	particlespawner.minpos = vector.offset(pos, particlespawner.minpos.x, particlespawner.minpos.y, particlespawner.minpos.z)
 	particlespawner.maxpos = vector.offset(pos, particlespawner.maxpos.x, particlespawner.maxpos.y, particlespawner.maxpos.z)
 	minetest.add_particlespawner{particlespawner}
+end
+
+teams.select_map = function(mapname)
+	if teams.game.is_running ~= true then
+		teams.maps.current_map = teams.maps[mapname]
+		teams.chat_send_all("Map Selected: " .. teams.maps[mapname].name)
+		minetest.log("Map name: " .. teams.maps.current_map.name)
+		teams.maps.current_map.init()
+	end
 end
 
 local leave_callbacks = {}
@@ -261,6 +364,7 @@ end
 teams.setup_lobby = function()
 	minetest.clear_objects({mode = "quick"})
 	minetest.place_schematic({x=400, y=0, z=400}, modpath .. "/schematics/lobby.mts", nil, nil, true)
+	minetest.place_schematic({x=0, y=500, z=0}, modpath .. teams.lobby.queuing_room.current.path, nil, nil, true)
 	for pn in pairs(teams.players) do -- move everyone to the lobby
 		minetest.get_player_by_name(pn):set_pos(teams.lobby.current.spawn)
 	end
@@ -332,7 +436,7 @@ teams.join_team = function(pn, team) -- use to make o player join a team
 		teams.teams[teams.get_team(pn)].players[pn] = nil -- remove player from old team
 	end
 	teams.teams[team].players[pn] = pn -- add player to new team
-	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0, is_playing = true}
+	teams.players[pn] = {team = team, name = pn, kills = 0, deaths = 0, beds = 0, is_playing = true, waiting = false}
 	local player = minetest.get_player_by_name(pn)
 	teams.add_teleport_particlespawner(player:get_pos())
 	player:set_pos(teams.maps.current_map.teams[team].spawn)
@@ -373,11 +477,25 @@ teams.on_joinplayer = function(pn) -- when joining a match
 	end
 end
 
+teams.queueplayer = function(player)
+	teams.game.waiting_players = teams.game.waiting_players + 1
+	teams.add_teleport_particlespawner(player:get_pos())
+	player:set_pos(teams.lobby.queuing_room.current.spawn)
+	teams.players[player:get_player_name()].waiting = true
+end
+
+teams.unqueueplayer = function(player)
+	teams.game.waiting_players = math.max(teams.game.waiting_players - 1, 0)
+	teams.add_teleport_particlespawner(player:get_pos())
+	player:set_pos(teams.lobby.current.spawn)
+	teams.players[player:get_player_name()].waiting = false
+end
+
 teams.leave_team = function(pn) -- leave the team you are on
 	if pn ~= nil then
 		run_leave_callbacks(minetest.get_player_by_name(pn), teams.get_team(pn)) -- ran before player data is deleted
 		if teams.teams[teams.get_team()] then teams.teams[teams.get_team(pn)].players[pn] = nil end -- remove player from team
-		teams.players[pn] = {team = "", name = pn, kills = 0, deaths = 0, beds = 0, is_playing = false} -- reset player
+		teams.players[pn] = {team = "", name = pn, kills = 0, deaths = 0, beds = 0, is_playing = false, waiting = false} -- reset player
 	end
 end
 
@@ -614,13 +732,14 @@ minetest.register_chatcommand("setup", { -- chatcommand for setting up a new wor
 	end,
 })
 
-minetest.register_chatcommand("lobby", { -- chatcommand for starting/restarting the game
+minetest.register_chatcommand("lobby", { -- chatcommand for going back to the lobby
     privs = {
 		interact = true,
     },
 	description = "Start game.\nUsage: /lobby",
     func = function(name, param)
 		minetest.get_player_by_name(name):get_inventory():set_list("main", {})
+		if teams.players[name].waiting == true then teams.unqueueplayer(minetest.get_player_by_name(name)) end
 		teams.on_leaveplayer(name)
 		teams.on_join_server(minetest.get_player_by_name(name))
 	end,
@@ -665,6 +784,71 @@ minetest.register_node("teams:join_game", {
 	on_blast = function() end,
 	can_dig = default.can_dig_map,
 })
+
+minetest.register_node("teams:queue", {
+	description = "Queue",
+	paramtype = "light",
+	paramtype2 = "4dir",
+	tiles = {
+		"teams_queue.png"
+	},
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
+	},
+	groups = {map_node=1, join_node=1},
+	on_punch = function(pos, node, puncher, pointed_thing)
+		puncher:get_inventory():set_list("main", {})
+		teams.queueplayer(puncher)
+	end,
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
+})
+
+local select_map_formspec_start = "size[8,9]" .. "list[current_player;main;0,5;8,4;]"
+local select_map_formspec_end = "label[4,0;Select Map]" ..
+								"button[0,1;4,1;galactium;Galactium (2p)]" .. -- unfortunately this has to be hardcoded :/
+								"button[4,1;4,1;asterisk2p;Asterisk (2p)]" ..
+								"button[0,2;4,1;cloverleaf2p;Clover Leaf (2p)]"
+local select_map_formspec = select_map_formspec_start .. select_map_formspec_end
+
+minetest.register_node("teams:select_map", {
+	description = "Select Map",
+	paramtype = "light",
+	paramtype2 = "4dir",
+	tiles = {
+		"teams_select_map.png"
+	},
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed    = {-0.375, -0.5, -0.375, 0.375, 0.375, 0.375},
+	},
+	groups = {map_node=1, join_node=1},
+	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		minetest.show_formspec(clicker:get_player_name(), "teams:select_map", select_map_formspec)
+	end,
+	on_punch = function(pos, node, puncher, pointed_thing)
+		minetest.show_formspec(puncher:get_player_name(), "teams:select_map", select_map_formspec)
+	end,
+	on_blast = function() end,
+	can_dig = default.can_dig_map,
+})
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname ~= "teams:select_map" then
+		return
+	end
+	
+	if fields.galactium then
+		teams.select_map("Galactium")
+	elseif fields.asterisk2p then
+		teams.select_map("Asterisk2p")
+	elseif fields.cloverleaf2p then
+		teams.select_map("CloverLeaf2p")
+	end
+end)
 
 --[[
 minetest.register_chatcommand("tstat", { -- show stats for your team

@@ -50,6 +50,7 @@ potions.remove_effect = function(player, effect)
 end
 
 potions.remove_all_effects = function(player)
+    if potions.players[player:get_player_name()] == nil then return end
     for effect_name in pairs(potions.players[player:get_player_name()].effects) do
         potions.remove_effect(player, effect_name)
     end
