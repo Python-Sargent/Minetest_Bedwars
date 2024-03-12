@@ -33,6 +33,70 @@ shop.buy_item = function(inv, player, cost, item, type, reqtext)
 	end
 end
 
+local function createBasicShopFormspec(player)
+	local inv = player:get_inventory()
+	local sword = {item = "default:sword_stone", name = "stone_sword"}
+	if inv:contains_item("main", "default:sword_diamond") then
+		sword = {item = "default:sword_diamond", name = "diamond_sword"}
+	elseif inv:contains_item("main", "default:sword_steel") then
+		sword = {item = "default:sword_diamond", name = "diamond_sword"}
+	elseif inv:contains_item("main", "default:sword_stone") then
+		sword = {item = "default:sword_steel", name = "steel_sword"}
+	elseif inv:contains_item("main", "default:sword_wood") then
+		sword = {item = "default:sword_stone", name = "stone_sword"}
+	end
+
+	local pickaxe = {item = "default:pick_stone", name = "stone_pick"}
+	if inv:contains_item("main", "default:pick_diamond") then
+		pickaxe = {item = "default:pick_diamond", name = "diamond_pick"}
+	elseif inv:contains_item("main", "default:pick_steel") then
+		pickaxe = {item = "default:pick_diamond", name = "diamond_pick"}
+	elseif inv:contains_item("main", "default:pick_stone") then
+		pickaxe = {item = "default:pick_steel", name = "steel_pick"}
+	end
+
+	local name = player:get_player_name()
+	local formspec = "size[8,9]" .. "list[current_player;main;0,5;8,4;]" ..
+	"item_image_button[0,0;1,1;" .. sword.item.. ";" .. sword.name .. ";1]" ..
+	"item_image_button[1,0;1,1;" .. pickaxe.item .. ";" .. pickaxe.name .. ";1]" ..
+	"item_image_button[2,0;1,1;default:shears;shears;1]" ..
+	"item_image_button[3,0;1,1;default:knockback_stick;knockback_stick;1]" ..
+	"item_image_button[0,1;1,1;default:stone;stone;16]" ..
+	"item_image_button[1,1;1,1;wool:" .. teams.get_team(name) .. ";wool;16]" ..
+	"item_image_button[2,1;1,1;default:sandstone;sandstone;12]" ..
+	"item_image_button[3,1;1,1;default:obsidian;obsidian;4]" ..
+	"item_image_button[4,1;1,1;blastproof_glass:" .. teams.get_team(name) .. ";blastproof_glass;4]" ..
+	"item_image_button[0,2;1,1;tnt:tnt;tnt;1]" ..
+	"item_image_button[1,2;1,1;turret:turret;turret;1]" ..
+	"item_image_button[2,2;1,1;fireball:fireball;fireball;1]" ..
+	"item_image_button[3,2;1,1;enderpearl:ender_pearl;enderpearl;1]" ..
+	"item_image_button[4,2;1,1;golden_apple:golden_apple;golden_apple;1]" ..
+	"item_image_button[5,2;1,1;potions:jump_boost_potion;jump_boost;1]" ..
+	"item_image_button[6,2;1,1;potions:speed_potion;speed;1]" ..
+	"tooltip[stone_sword;Stone Sword\nCost: 10 Steel;grey;white]" ..
+	"tooltip[steel_sword;Steel Sword\nCost: 7 Gold;grey;gold]" ..
+	"tooltip[diamond_sword;Diamond Sword\nCost: 4 Mese;grey;lightgreen]" ..
+	"tooltip[stone_pick;Stone Pickaxe\nCost: 6 Steel;grey;white]" ..
+	"tooltip[steel_pick;Steel Pickaxe\nCost: 4 Gold;grey;gold]" ..
+	"tooltip[diamond_pick;Diamond Pickaxe\nCost: 1 Mese;grey;lightgreen]" ..
+	"tooltip[shears;Shears\nCost: 4 Steel Ingot;grey;white]" ..
+	"tooltip[knockback_stick;Knockback Stick\nCost: 5 Gold Ingot;grey;gold]" ..
+	"tooltip[wool;" .. teams.get_team(name) ..  " Wool\nCost: 4 Steel;grey;white]" ..
+	"tooltip[sandstone;Sandstone\nCost: 24 Steel;grey;white]" ..
+	"tooltip[stone;Stone\nCost: 4 Gold;grey;gold]" ..
+	"tooltip[obsidian;Obsidian\nCost: 4 Mese;grey;lightgreen]" ..
+	"tooltip[blastproof_glass;Blastproof Glass\nCost: 4 Steel Ingot;grey;white]" ..
+	"tooltip[tnt;TNT\nCost: 4 Gold;grey;gold]" ..
+	"tooltip[turret;Defensive Turret\nCost: 120 Steel;grey;white]" ..
+	"tooltip[fireball;Fireball\nCost: 40 Steel;grey;white]" ..
+	"tooltip[enderpearl;Enderpearl\nCost: 4 Mese;grey;lightgreen]" ..
+	"tooltip[golden_apple;Golden Apple\nCost: 3 Gold Ingot;grey;gold]" ..
+	"tooltip[jump_boost;Jump Boost Potion\nCost: 1 Mese;grey;lightgreen]" ..
+	"tooltip[speed;Speed Potion\nCost: 1 Mese;grey;lightgreen]"
+
+	return formspec
+end
+
 shop.register_shop = function(def)
 	minetest.register_node("base_shop:" .. tostring(def.shop_name) .. "_shop", {
 		description = tostring(def.shop_type) .. " Shop",
@@ -56,8 +120,8 @@ shop.register_shop = function(def)
 		on_blast = function() end,
 		can_dig = default.can_dig_map,
 		on_rightclick = function(pos, _, clicker)
-			local name = clicker:get_player_name()
-			local formspec_begin = "size[8,9]"
+			--local name = clicker:get_player_name()
+			--[[local formspec_begin = "size[8,9]"
 			local formspec_end = "list[current_player;main;0,5;8,4;]"
 			local formspec_mid = "item_image_button[0,0;1,1;default:sword_stone;stone_sword;1]" ..
 								 "item_image_button[1,0;1,1;default:sword_steel;steel_sword;1]" ..
@@ -98,10 +162,10 @@ shop.register_shop = function(def)
 								  "tooltip[enderpearl;Enderpearl\nCost: 4 Mese;grey;lightgreen]" ..
 								  "tooltip[golden_apple;Golden Apple\nCost: 3 Gold Ingot;grey;gold]" ..
 								  "tooltip[jump_boost;Jump Boost Potion\nCost: 1 Mese;grey;lightgreen]" ..
-								  "tooltip[speed;Speed Potion\nCost: 1 Mese;grey;lightgreen]"
+								  "tooltip[speed;Speed Potion\nCost: 1 Mese;grey;lightgreen]"]]
 
 			--item_image_button[0,0;1,1;default:sword_diamond;diamond_sword;Sword]
-			minetest.show_formspec(name, "base_shop:" .. def.shop_type, formspec_begin .. formspec_mid .. formspec_mid2 .. formspec_end)
+			minetest.show_formspec(clicker:get_player_name(), "base_shop:" .. def.shop_type, createBasicShopFormspec(clicker))
 		end,
 	})
 
@@ -170,6 +234,9 @@ shop.register_shop = function(def)
 		end
 		if fields.speed then
 			shop.buy_item(inv, player, "default:mese_crystal 1", "potions:speed_potion", nil, "1 Mese Crystal")
+		end
+		if not fields.enter and not fields.quit then
+			minetest.show_formspec(player:get_player_name(), "base_shop:" .. def.shop_type, createBasicShopFormspec(player))
 		end
 	end)
 end
