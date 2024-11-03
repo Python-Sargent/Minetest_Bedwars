@@ -166,7 +166,7 @@ potions.register_effect({
 potions.register_effect({
     name = "absorption",
     on_apply = function(player, strength)
-
+        
     end,
     on_end = function(player)
         minetest.chat_send_player(player:get_player_name(), "Your absorption effect ran out.")

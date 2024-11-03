@@ -502,6 +502,16 @@ teams.leave_team = function(pn) -- leave the team you are on
 end
 
 teams.on_leaveplayer = function(pn) -- when left a match
+	minetest.chat_send_all(minetest.colorize(teams.get_team(pn), pn .. " ") .. "left")
+	local players_left = 0
+	for tn in pairs(teams.maps.current_map.teams) do
+		if teams.teams[tn] and teams.lent(teams.teams[tn].players) >= 1 then
+			players_left = players_left + 1
+		end
+	end
+	if players_left < 1 then -- no one playing
+		teams.game.is_running = false
+	end
 	teams.leave_team(pn)
 end
 
@@ -527,7 +537,7 @@ teams.on_digbed = function(pn, team) -- someone broke a bed (already checked to 
 		teams.players[pn].beds = teams.players[pn].beds + 1
 		minetest.chat_send_all(minetest.colorize(teams.teams[team].name, team .. "'s") .. " bed was broken by " .. minetest.colorize(teams.players[pn].team, pn))
 	else
-		minetest.chat_send_all("What on earth, this bed has no team!?!")
+		minetest.chat_send_all("bed has no team")
 	end
 end
 
@@ -614,7 +624,7 @@ local listp = function(name)
 		minetest.chat_send_player(name, minetest.colorize(teams.teams[teams.get_team(name)].name, name .. ": ") .. teams.players[pn].deaths .. " deaths, " .. teams.players[pn].kills .. " kills.")
 		pc = pc + 1 -- add to player count
 	end
-	return true, "Showing a total of " .. pc .. " players, and " .. 0 .. " hidden."
+	return true, "Showing a total of " .. pc .. " players"
 end
 
 minetest.register_chatcommand("teams", { -- chatcommand to control teams (must be server priviliged for the actual manipulation of teams)

@@ -33,7 +33,7 @@ minetest.register_chatcommand("killme", {
 minetest.register_chatcommand("setblock", {
 	description = S("setblock at yourself to node of type 'default:cobble'"),
 	func = function(name)
-		player = minetest.get_player_by_name(name)
+		local player = minetest.get_player_by_name(name)
 		if player then
 			minetest.set_node(player:get_pos(), {name = "default:cobble"})
 		else
